@@ -5,7 +5,6 @@ func _ready():
 	pass # Replace with function body.
 
 func enter() -> void:
-	print("In Moving")
 	pass
 
 func resume() -> void:

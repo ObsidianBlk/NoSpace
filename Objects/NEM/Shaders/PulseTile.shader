@@ -3,6 +3,7 @@ shader_type canvas_item;
 uniform vec4 color : hint_color = vec4(1.0, 1.0, 1.0, 1.0);
 uniform float base_intensity : hint_range(0.0, 1.0) = 0.25;
 uniform float overall_intensity : hint_range(0.0, 1.0) = 1.0;
+uniform float alpha : hint_range(0.0, 1.0) = 1.0;
 uniform float rim_thickness : hint_range(0.01, 0.5) = 0.02;
 uniform float rim_fade : hint_range(0.0, 1.0) = 0.5;
 
@@ -31,5 +32,5 @@ vec4 calculateRim(vec2 uv){
 void fragment(){
 	vec4 clr = calculateRim(UV);
 	
-	COLOR = vec4(clr.rgb * overall_intensity, 1.0);
+	COLOR = vec4(clr.rgb * overall_intensity, alpha);
 }

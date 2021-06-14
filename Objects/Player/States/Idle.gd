@@ -5,7 +5,6 @@ func _ready():
 	pass # Replace with function body.
 
 func enter() -> void:
-	print("In Idle")
 	host.move(Player.DIRECTION.UP, 0.0)
 	host.move(Player.DIRECTION.DOWN, 0.0)
 	host.move(Player.DIRECTION.LEFT, 0.0)
