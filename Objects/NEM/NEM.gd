@@ -4,15 +4,17 @@ extends Node2D
 # ---------------------------------------------------------------------------
 # ENUM Definitions
 # ---------------------------------------------------------------------------
-enum TILE_TYPE {NONE = 0, FLOOR = 1, WALL = 2}
+enum TILE_TYPE {NONE = 0, FLOOR = 1, WALL = 2, DOOR = 3}
 
 # ---------------------------------------------------------------------------
 # Variables
 # ---------------------------------------------------------------------------
 var tile_resource = preload("res://Objects/NEM/PulseTile.tscn")
+var door_resource = preload("res://Objects/NEM/DoorTile.tscn")
 var tile_size = 32
 
 var player_node = null
+var camera_node = null
 var regions = []
 
 var living_regions = []
@@ -44,12 +46,15 @@ func _clear_living_tiles() -> void:
 	for key in living_tiles:
 		var n = living_tiles[key]
 		if is_entity_visible(n):
-			var dist = player_node.position.distance_to(n.position)
-			n.alpha = 1.0 - (dist / player_node.sight)
+			if n is PulseTile:
+				var dist = player_node.position.distance_to(n.position)
+				n.alpha = 1.0 - (dist / player_node.sight)
 		else:
 			dkeys.append(key)
 			
 	for key in dkeys:
+		if living_tiles[key] is DoorTile:
+			living_tiles[key].disconnect("door_opened", self, "_on_door_opened")
 		floors_node.remove_child(living_tiles[key])
 		living_tiles[key].queue_free()
 		living_tiles.erase(key)
@@ -86,19 +91,51 @@ func _scan_for_living_tiles() -> void:
 				
 				if not (key in living_tiles) and is_position_visible(tpos) and ttype != TILE_TYPE.NONE:
 					var ridx = tiles[idx][0]
-					var tn = tile_resource.instance()
+					var tidx = tiles[idx][3]
+					var tn = null
 					
-					floors_node.add_child(tn)
-					tn.position = tpos
+					if ttype == TILE_TYPE.DOOR:
+						print("Checking for door")
+						var dinfo = _get_door_info(ridx, tidx)
+						if dinfo != null:
+							tn = door_resource.instance()
+							tn.facing = dinfo.facing
+							tn.ridx = dinfo.to_ridx
+							tn.tidx = dinfo.to_tidx
+							tn.connect("door_opened", self, "_on_door_open")
+						else:
+							print("Failed to find door")
+							ttype = TILE_TYPE.WALL
+					
 					if ttype == TILE_TYPE.FLOOR:
+						tn = tile_resource.instance()
 						tn.color = regions[ridx].floor_color
 					elif ttype == TILE_TYPE.WALL:
+						tn = tile_resource.instance()
 						tn.color = regions[ridx].wall_color
 						tn.collision_enabled = true
 						tn.base_intensity = 1.0
-					living_tiles[key] = tn
+					
+					if tn != null:
+						floors_node.add_child(tn)
+						tn.position = tpos
+						living_tiles[key] = tn
 				idx += 1
 
+func _get_door_info(ridx : int, tidx : int):
+	var door_list = regions[ridx].doors
+	for door in door_list:
+		if door.tidx == tidx and _door_exists(door.to_ridx, door.to_didx):
+			return door
+	return null
+
+func _door_exists(ridx : int, didx : int) -> bool:
+	if ridx >= 0 and ridx <= regions.size():
+		var door_list = regions[ridx].doors
+		for door in door_list:
+			if door.didx == didx:
+				return true
+	return false
 
 func _world_to_region(pos : Vector2, lridx : int) -> Vector2:
 	if living_regions.size() <= 0:
@@ -128,11 +165,12 @@ func _get_tiles(pos : Vector2, radius : float, lridx : int = 0):
 		for x in range(start.x - trad, start.x + trad):
 			var tval = TILE_TYPE.NONE
 			var tpos = Vector2(x, y)
+			var tidx = (y * reg_size.x) + x
 			if x >= 0 and x < reg_size.x and y >= 0 and y < reg_size.y:
 				var dist = tpos.distance_to(start)
 				if dist < trad:
-					tval = reg.tiles[(y * reg_size.x) + x]
-			tiles.append([living_regions[lridx].ridx, tval, tpos])
+					tval = reg.tiles[tidx]
+			tiles.append([living_regions[lridx].ridx, tval, tpos, tidx])
 	return tiles
 
 func _get_cur_region_player_start() -> Vector2:
@@ -149,6 +187,10 @@ func _get_cur_region_player_start() -> Vector2:
 		else:
 			return (regions[ridx].player_start * tile_size) + living_regions[0].offset
 	return Vector2.ZERO
+
+func _link_camera_and_player() -> void:
+	if camera_node and player_node:
+		camera_node.target_path = player_node.get_path()
 
 # ---------------------------------------------------------------------------
 # NODE Override Methods
@@ -180,6 +222,26 @@ func attach_player(p : Player, container : Node2D) -> void:
 		ents_node.add_child(p)
 		player_node = p
 		player_node.position = ppos
+		
+		_link_camera_and_player()
+
+
+func detach_camera_to_container(container : Node2D) -> void:
+	if camera_node != null:
+		camera_node.target_path = ""
+		remove_child(camera_node)
+		container.add_child(camera_node)
+		camera_node = null
+
+func attach_camera(c : Camera2D, container : Node2D) -> void:
+	if camera_node != c:
+		detach_camera_to_container(container)
+		var cparent = c.get_parent()
+		cparent.remove_child(c)
+		add_child(c)
+		camera_node = c
+		
+		_link_camera_and_player()
 
 func is_position_visible(pos : Vector2) -> bool:
 	if player_node == null:
@@ -199,6 +261,7 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 		"width": 0,
 		"height": 0,
 		"player_start": null,
+		"doors": [],
 		"tiles":null
 	}
 	
@@ -229,7 +292,45 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 						reg.tiles[index] = TILE_TYPE.WALL
 				else:
 					reg.tiles[index] = TILE_TYPE.FLOOR
-	# TODO: Handle Doors
+	
+	for didx in range(0, door_list.size() - 1):
+		var door = door_list[didx]
+		var dx = door.x - container_rect.position.x
+		var dy = door.y - container_rect.position.y
+		if dx >= 1 and dx < container_rect.size.x - 1 and dy >= 1 and dy < container_rect.size.y - 1:
+			var idx = (dy * container_rect.size.x) + dx
+			if reg.tiles[idx] == TILE_TYPE.WALL:
+				var facing = -1 # -1 = Invalid
+				
+				var idx_l = (dy * container_rect.size.x) + (dx - 1)
+				var idx_r = (dy * container_rect.size.y) + (dx + 1)
+				var idx_u = ((dy - 1) * container_rect.size.x) + dx
+				var idx_d = ((dy + 1) * container_rect.size.x) + dx
+				if reg.tiles[idx_l] == TILE_TYPE.WALL and reg.tiles[idx_r] == TILE_TYPE.WALL:
+					if reg.tiles[idx_u] == TILE_TYPE.NONE:
+						facing = DoorTile.FACING.UP
+					elif reg.tiles[idx_d] == TILE_TYPE.NONE:
+						facing = DoorTile.FACING.DOWN
+					
+				
+				if facing < 0:
+					if reg.tiles[idx_u] == TILE_TYPE.WALL and reg.tiles[idx_d] == TILE_TYPE.WALL:
+						if reg.tiles[idx_l] == TILE_TYPE.NONE:
+							facing = DoorTile.FACING.LEFT
+						if reg.tiles[idx_r] == TILE_TYPE.NONE:
+							facing = DoorTile.FACING.RIGHT
+						
+				if facing == 0 || facing == 1:
+					reg.doors.append({
+						"tidx": idx,
+						"didx": didx,
+						"x":dx,
+						"y":dy,
+						"facing": facing,
+						"to_ridx":door.to_ridx,
+						"to_didx":door.to_didx
+					})
+					reg.tiles[idx] = TILE_TYPE.DOOR
 	
 	var px = int(player_start_pos.x) - container_rect.position.x
 	var py = int(player_start_pos.y) - container_rect.position.y
@@ -249,5 +350,8 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 # ---------------------------------------------------------------------------
 # Signal Handler Methods
 # ---------------------------------------------------------------------------
+
+func _on_door_open(ridx : int, tidx : int) -> void:
+	pass
 
 

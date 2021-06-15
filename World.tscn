@@ -1,33 +1,39 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://Objects/Player/Player.tscn" type="PackedScene" id=1]
 [ext_resource path="res://Objects/NEM/NEM.tscn" type="PackedScene" id=2]
 [ext_resource path="res://World.gd" type="Script" id=3]
 [ext_resource path="res://Assets/Graphics/white.jpg" type="Texture" id=4]
 [ext_resource path="res://Shaders/Starfield.shader" type="Shader" id=5]
+[ext_resource path="res://Objects/Camera/Camera.tscn" type="PackedScene" id=6]
 
-[sub_resource type="ShaderMaterial" id=3]
+[sub_resource type="ShaderMaterial" id=1]
 resource_local_to_scene = true
 shader = ExtResource( 5 )
 shader_param/num_layers = 4
-shader_param/starfield_scale = 4.0
-shader_param/star_scale = 0.2
-shader_param/star_color_saturation = 0.419
+shader_param/starfield_scale = 1.0
+shader_param/star_scale = 0.328
+shader_param/star_color_saturation = 0.36
 shader_param/flare_range = 0.2
-shader_param/flare_intensity = 0.233
+shader_param/flare_intensity = 0.163
 shader_param/anim_scale = 0.01
 
-[sub_resource type="Environment" id=1]
+[sub_resource type="Environment" id=2]
 background_mode = 1
 glow_enabled = true
 
 [node name="World" type="Node2D"]
 script = ExtResource( 3 )
 
-[node name="Starfield" type="Sprite" parent="."]
-material = SubResource( 3 )
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+
+[node name="ParallaxLayer" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_mirroring = Vector2( 1, 1 )
+
+[node name="Starfield" type="Sprite" parent="ParallaxBackground/ParallaxLayer"]
+material = SubResource( 1 )
 position = Vector2( 0, -1 )
-scale = Vector2( 240, 135 )
+scale = Vector2( 960, 540 )
 texture = ExtResource( 4 )
 centered = false
 
@@ -36,7 +42,10 @@ centered = false
 [node name="Player" parent="Container" instance=ExtResource( 1 )]
 position = Vector2( 361, 263 )
 
+[node name="Camera" parent="Container" instance=ExtResource( 6 )]
+current = true
+
 [node name="NEM" parent="." instance=ExtResource( 2 )]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource( 1 )
+environment = SubResource( 2 )
