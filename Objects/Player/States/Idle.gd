@@ -21,6 +21,12 @@ func pause() -> void:
 
 func handle_input(_event) -> void:
 	.handle_input(_event)
+	
+	if _event.is_action_pressed("trigger"):
+		host.trigger()
+	elif _event.is_action_released("trigger"):
+		host.trigger(false)
+
 	if host.is_moving():
 		emit_signal("finished", "Moving")
 

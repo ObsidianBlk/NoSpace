@@ -1,6 +1,9 @@
 extends KinematicBody2D
 class_name Player
 
+
+signal trigger
+
 enum DIRECTION {UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3}
 
 export var sight : int = 512					setget _set_sight
@@ -12,6 +15,8 @@ export var vel_threshold : float = 4.0			setget _set_vel_threshold
 var velocity : Vector2 = Vector2.ZERO
 var direction : Vector2 = Vector2.ZERO
 var motion : Array = [0,0,0,0]
+
+var triggered = false
 
 onready var vizcast_node = $Vizcast
 onready var vizcast2_node = $Vizcast2
@@ -83,13 +88,19 @@ func can_see_node(n : Node2D) -> bool:
 		var res = _caster_to_position(vizcast_node, n.position)
 		if res == null or res == n:
 			return true
-		if n is PulseTile:
+		if n is PulseTile or n is DoorTile:
 			var corners = n.get_corners()
 			for corner in corners:
 				res = _caster_to_position(vizcast_node, corner)
 				if res == null or res == n:
 					return true
 	return false
+
+func trigger(e : bool = true) -> void:
+	if triggered != e:
+		triggered = e
+		if triggered:
+			emit_signal("trigger")
 
 func is_moving() -> bool:
 	return velocity.length_squared() > 0.0

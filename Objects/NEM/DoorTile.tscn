@@ -1,7 +1,22 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://Assets/Graphics/Door.png" type="Texture" id=1]
 [ext_resource path="res://Objects/NEM/DoorTile.gd" type="Script" id=2]
+[ext_resource path="res://Shaders/PalSwap4.shader" type="Shader" id=3]
+
+[sub_resource type="ShaderMaterial" id=6]
+resource_local_to_scene = true
+shader = ExtResource( 3 )
+shader_param/pal_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
+shader_param/pal_col_2 = Color( 0.6, 0.6, 0.6, 1 )
+shader_param/pal_col_3 = Color( 0.8, 0.8, 0.8, 1 )
+shader_param/pal_col_4 = Color( 0, 0, 0, 1 )
+shader_param/replace_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
+shader_param/replace_col_2 = Color( 0.6, 0.6, 0.6, 1 )
+shader_param/replace_col_3 = Color( 0.8, 0.8, 0.8, 1 )
+shader_param/replace_col_4 = Color( 0, 0, 0, 1 )
+shader_param/precision = 0.1
+shader_param/alpha = 1.0
 
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 32, 8 )
@@ -83,15 +98,20 @@ extents = Vector2( 32, 32 )
 
 [node name="DoorTile" type="StaticBody2D"]
 script = ExtResource( 2 )
+facing = 1
 
 [node name="Sprite" type="Sprite" parent="."]
+material = SubResource( 6 )
+position = Vector2( 16, -16 )
+rotation = 1.5708
 scale = Vector2( 4, 4 )
 texture = ExtResource( 1 )
 hframes = 8
 frame = 6
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2( -1.04907e-06, 24 )
+position = Vector2( -8, -16 )
+rotation = 1.5708
 shape = SubResource( 1 )
 
 [node name="Anim" type="AnimationPlayer" parent="."]
@@ -101,13 +121,14 @@ anims/idle = SubResource( 3 )
 anims/open = SubResource( 4 )
 
 [node name="ActArea" type="Area2D" parent="."]
-position = Vector2( 0, 24 )
+position = Vector2( -8, -16 )
 collision_layer = 0
 collision_mask = 32
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ActArea"]
 shape = SubResource( 5 )
 
+[connection signal="tree_entered" from="." to="." method="_on_tree_entered"]
 [connection signal="animation_finished" from="Anim" to="." method="_on_anim_finished"]
 [connection signal="body_entered" from="ActArea" to="." method="_on_body_entered"]
 [connection signal="body_exited" from="ActArea" to="." method="_on_body_exited"]

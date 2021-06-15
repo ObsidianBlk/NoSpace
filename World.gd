@@ -17,7 +17,7 @@ func _ready():
 		],
 		[{
 			"x":0,
-			"y":-4,
+			"y":4,
 			"to_ridx":1,
 			"to_didx":0
 		}],

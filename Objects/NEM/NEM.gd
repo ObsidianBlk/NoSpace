@@ -46,7 +46,7 @@ func _clear_living_tiles() -> void:
 	for key in living_tiles:
 		var n = living_tiles[key]
 		if is_entity_visible(n):
-			if n is PulseTile:
+			if n is PulseTile or n is DoorTile:
 				var dist = player_node.position.distance_to(n.position)
 				n.alpha = 1.0 - (dist / player_node.sight)
 		else:
@@ -101,7 +101,8 @@ func _scan_for_living_tiles() -> void:
 							tn = door_resource.instance()
 							tn.facing = dinfo.facing
 							tn.ridx = dinfo.to_ridx
-							tn.tidx = dinfo.to_tidx
+							tn.didx = dinfo.to_didx
+							tn.color = regions[ridx].wall_color
 							tn.connect("door_opened", self, "_on_door_open")
 						else:
 							print("Failed to find door")
@@ -293,34 +294,48 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 				else:
 					reg.tiles[index] = TILE_TYPE.FLOOR
 	
-	for didx in range(0, door_list.size() - 1):
+	for didx in range(0, door_list.size()):
+		print("Attempting to store door")
 		var door = door_list[didx]
 		var dx = door.x - container_rect.position.x
 		var dy = door.y - container_rect.position.y
-		if dx >= 1 and dx < container_rect.size.x - 1 and dy >= 1 and dy < container_rect.size.y - 1:
+		print("Dx: ", dx, " | Dy: ", dy, " | Size: ", container_rect.size, " | Pos: ", container_rect.position)
+		if dx >= 0 and dx <= container_rect.size.x and dy >= 0 and dy <= container_rect.size.y:
 			var idx = (dy * container_rect.size.x) + dx
 			if reg.tiles[idx] == TILE_TYPE.WALL:
 				var facing = -1 # -1 = Invalid
 				
 				var idx_l = (dy * container_rect.size.x) + (dx - 1)
+				if dx - 1 < 0:
+					idx_l = -1
+					
 				var idx_r = (dy * container_rect.size.y) + (dx + 1)
+				if dx + 1 > container_rect.size.x:
+					idx_r = -1
+					
 				var idx_u = ((dy - 1) * container_rect.size.x) + dx
+				if dy - 1 < 0:
+					idx_u = -1
+					
 				var idx_d = ((dy + 1) * container_rect.size.x) + dx
-				if reg.tiles[idx_l] == TILE_TYPE.WALL and reg.tiles[idx_r] == TILE_TYPE.WALL:
-					if reg.tiles[idx_u] == TILE_TYPE.NONE:
+				if dy + 1 > container_rect.size.y:
+					idx_d = -1
+					
+				if idx_l >= 0 and idx_r >= 0 and reg.tiles[idx_l] == TILE_TYPE.WALL and reg.tiles[idx_r] == TILE_TYPE.WALL:
+					if idx_u == -1 or reg.tiles[idx_u] == TILE_TYPE.NONE:
 						facing = DoorTile.FACING.UP
-					elif reg.tiles[idx_d] == TILE_TYPE.NONE:
+					elif idx_d == -1 or reg.tiles[idx_d] == TILE_TYPE.NONE:
 						facing = DoorTile.FACING.DOWN
 					
 				
 				if facing < 0:
-					if reg.tiles[idx_u] == TILE_TYPE.WALL and reg.tiles[idx_d] == TILE_TYPE.WALL:
-						if reg.tiles[idx_l] == TILE_TYPE.NONE:
+					if idx_u >= 0 and idx_d >= 0 and reg.tiles[idx_u] == TILE_TYPE.WALL and reg.tiles[idx_d] == TILE_TYPE.WALL:
+						if idx_l == -1 or reg.tiles[idx_l] == TILE_TYPE.NONE:
 							facing = DoorTile.FACING.LEFT
-						if reg.tiles[idx_r] == TILE_TYPE.NONE:
+						if idx_r == -1 or reg.tiles[idx_r] == TILE_TYPE.NONE:
 							facing = DoorTile.FACING.RIGHT
 						
-				if facing == 0 || facing == 1:
+				if facing > -1:
 					reg.doors.append({
 						"tidx": idx,
 						"didx": didx,
@@ -331,6 +346,10 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 						"to_didx":door.to_didx
 					})
 					reg.tiles[idx] = TILE_TYPE.DOOR
+					if facing == DoorTile.FACING.UP or facing == DoorTile.FACING.DOWN:
+						reg.tiles[idx_l] = TILE_TYPE.NONE
+					elif facing == DoorTile.FACING.LEFT or facing == DoorTile.FACING.RIGHT:
+						reg.tiles[idx_u] = TILE_TYPE.NONE
 	
 	var px = int(player_start_pos.x) - container_rect.position.x
 	var py = int(player_start_pos.y) - container_rect.position.y
@@ -351,7 +370,7 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 # Signal Handler Methods
 # ---------------------------------------------------------------------------
 
-func _on_door_open(ridx : int, tidx : int) -> void:
+func _on_door_open(dx : float, dy: float, ridx : int, didx : int) -> void:
 	pass
 
 

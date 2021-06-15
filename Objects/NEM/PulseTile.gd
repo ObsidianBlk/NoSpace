@@ -79,4 +79,4 @@ func get_corners() -> Array:
 			Vector2((position.x + hw) + 1, (position.y + hh) + 1),
 			Vector2((position.x - hw) - 1, (position.y + hh) + 1)
 		]
-	return corners	
+	return corners
