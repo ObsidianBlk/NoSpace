@@ -45,18 +45,19 @@ func _clear_living_tiles() -> void:
 	var dkeys = []
 	for key in living_tiles:
 		var n = living_tiles[key]
-		if is_entity_visible(n):
-			if n is PulseTile or n is DoorTile:
-				var dist = player_node.position.distance_to(n.position)
-				n.alpha = 1.0 - (dist / player_node.sight)
+		if _is_region_alive(n.ridx) and is_entity_visible(n.tile):
+			if n.tile is PulseTile or n.tile is DoorTile:
+				var dist = player_node.position.distance_to(n.tile.position)
+				n.tile.alpha = 1.0 - (dist / player_node.sight)
 		else:
 			dkeys.append(key)
 			
 	for key in dkeys:
-		if living_tiles[key] is DoorTile:
-			living_tiles[key].disconnect("door_opened", self, "_on_door_opened")
-		floors_node.remove_child(living_tiles[key])
-		living_tiles[key].queue_free()
+		if living_tiles[key].tile is DoorTile:
+			living_tiles[key].tile.disconnect("door_opened", self, "_on_door_opened")
+			living_tiles[key].tile.disconnect("door_closed", self, "_on_door_closed")
+		floors_node.remove_child(living_tiles[key].tile)
+		living_tiles[key].tile.queue_free()
 		living_tiles.erase(key)
 
 
@@ -73,7 +74,7 @@ func _scan_for_living_tiles() -> void:
 			# TODO: If this is an actual issue, figure out a better solution?
 		else:
 			for idx in range(0, tiles.size()):
-				if tiles[idx][1] == TILE_TYPE.NONE:
+				if tiles[idx][1] == TILE_TYPE.NONE and tb[idx][1] != TILE_TYPE.NONE:
 					tiles[idx] = tb[idx]
 	
 	if tiles.size() > 0:
@@ -81,47 +82,47 @@ func _scan_for_living_tiles() -> void:
 		var py = int(player_node.position.y) % int(tile_size)
 		var rad = floor(player_node.sight / tile_size)
 		var start = Vector2(px - rad, py - rad)
-		var idx = 0
 
-		for y in range(start.y, (start.y + (rad * 2))):
-			for x in range(start.x, (start.x + (rad * 2))):
-				var tpos = tiles[idx][2] * tile_size
-				var key = String(tpos.x) + "x" + String(tpos.y)
-				var ttype = tiles[idx][1]
+		for idx in range(0, tiles.size()):
+			var ridx = tiles[idx][0]
+			var ttype = tiles[idx][1]
+			var tpos = tiles[idx][2] * tile_size
+			var tidx = tiles[idx][3]
+			var key = String(tpos.x) + "x" + String(tpos.y)
+			
+			if not (key in living_tiles) and is_position_visible(tpos) and ttype != TILE_TYPE.NONE:
+				var tn = null
 				
-				if not (key in living_tiles) and is_position_visible(tpos) and ttype != TILE_TYPE.NONE:
-					var ridx = tiles[idx][0]
-					var tidx = tiles[idx][3]
-					var tn = null
-					
-					if ttype == TILE_TYPE.DOOR:
-						print("Checking for door")
-						var dinfo = _get_door_info(ridx, tidx)
-						if dinfo != null:
-							tn = door_resource.instance()
-							tn.facing = dinfo.facing
-							tn.ridx = dinfo.to_ridx
-							tn.didx = dinfo.to_didx
-							tn.color = regions[ridx].wall_color
-							tn.connect("door_opened", self, "_on_door_open")
-						else:
-							print("Failed to find door")
-							ttype = TILE_TYPE.WALL
-					
-					if ttype == TILE_TYPE.FLOOR:
-						tn = tile_resource.instance()
-						tn.color = regions[ridx].floor_color
-					elif ttype == TILE_TYPE.WALL:
-						tn = tile_resource.instance()
+				if ttype == TILE_TYPE.DOOR:
+					print("Checking for door")
+					var dinfo = _get_door_info(ridx, tidx)
+					if dinfo != null:
+						if ridx == 1:
+							print("Door TPOS: ", tiles[idx][2], " | DInfo: ", dinfo, " | PPos: ", Vector2(px, py))
+						tn = door_resource.instance()
+						tn.facing = dinfo.facing
+						tn.ridx = dinfo.to_ridx
+						tn.didx = dinfo.to_didx
 						tn.color = regions[ridx].wall_color
-						tn.collision_enabled = true
-						tn.base_intensity = 1.0
-					
-					if tn != null:
-						floors_node.add_child(tn)
-						tn.position = tpos
-						living_tiles[key] = tn
-				idx += 1
+						tn.connect("door_opened", self, "_on_door_open")
+						tn.connect("door_closed", self, "_on_door_closed")
+					else:
+						print("Failed to find door")
+						ttype = TILE_TYPE.WALL
+				
+				if ttype == TILE_TYPE.FLOOR:
+					tn = tile_resource.instance()
+					tn.color = regions[ridx].floor_color
+				elif ttype == TILE_TYPE.WALL:
+					tn = tile_resource.instance()
+					tn.color = regions[ridx].wall_color
+					tn.collision_enabled = true
+					tn.base_intensity = 1.0
+				
+				if tn != null:
+					floors_node.add_child(tn)
+					tn.position = tpos
+					living_tiles[key] = {"ridx":ridx, "tile":tn}
 
 func _get_door_info(ridx : int, tidx : int):
 	var door_list = regions[ridx].doors
@@ -138,17 +139,6 @@ func _door_exists(ridx : int, didx : int) -> bool:
 				return true
 	return false
 
-func _world_to_region(pos : Vector2, lridx : int) -> Vector2:
-	if living_regions.size() <= 0:
-		return pos
-	if not (lridx >= 0 and lridx < living_regions.size()):
-		return pos
-	
-	var npos = pos - living_regions[lridx].offset
-	npos = Vector2(floor(npos.x / tile_size), floor(npos.y / tile_size))
-	
-	return npos
-
 func _get_tiles(pos : Vector2, radius : float, lridx : int = 0):
 	if living_regions.size() <= 0:
 		return
@@ -156,9 +146,11 @@ func _get_tiles(pos : Vector2, radius : float, lridx : int = 0):
 		return
 	
 	var tiles = []
+	pos = Vector2(floor(pos.x / tile_size), floor(pos.y / tile_size))
 	var reg = regions[living_regions[lridx].ridx]
-	var start = _world_to_region(pos, lridx)
 	var reg_size = Vector2(reg.width, reg.height)
+	var offset = living_regions[lridx].offset / tile_size
+	var start = -(offset - pos)
 	
 	var trad = floor(radius / tile_size)
 	
@@ -171,8 +163,14 @@ func _get_tiles(pos : Vector2, radius : float, lridx : int = 0):
 				var dist = tpos.distance_to(start)
 				if dist < trad:
 					tval = reg.tiles[tidx]
-			tiles.append([living_regions[lridx].ridx, tval, tpos, tidx])
+			tiles.append([living_regions[lridx].ridx, tval, tpos + offset, tidx])
 	return tiles
+
+func _is_region_alive(ridx : int) -> bool:
+	for lr in living_regions:
+		if lr.ridx == ridx:
+			return true
+	return false
 
 func _get_cur_region_player_start() -> Vector2:
 	if living_regions.size() > 0:
@@ -371,6 +369,26 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 # ---------------------------------------------------------------------------
 
 func _on_door_open(dx : float, dy: float, ridx : int, didx : int) -> void:
-	pass
+	if living_regions.size() > 1:
+		return # We will only ever have 2 regions at most "alive" at once!
+	
+	var pos = Vector2(dx / tile_size, dy / tile_size)
+	var offset = Vector2.ZERO
+	if ridx >= 0 and ridx <= regions.size():
+		var door_list = regions[ridx].doors
+		for door in door_list:
+			if door.didx == didx:
+				offset.x = (pos.x - (door.x - 1)) * tile_size
+				offset.y = (pos.y - (door.y - 1)) * tile_size
+				living_regions.append({
+					"offset": offset,
+					"ridx": ridx
+				})
 
+func _on_door_closed(exited_through : bool) -> void:
+	if living_regions.size() > 1:
+		if exited_through:
+			living_regions = [living_regions[1]]
+		else:
+			living_regions = [living_regions[0]]
 

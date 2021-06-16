@@ -3,6 +3,7 @@ extends StaticBody2D
 class_name DoorTile
 
 signal door_opened(dx, dy, ridx, didx)
+signal door_closed(through)
 
 enum FACING {UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3}
 
@@ -13,6 +14,7 @@ export var ridx : int = -1
 export var didx : int = -1
 
 var trigger_body = null
+var exited_through = false
 
 onready var colshape = $CollisionShape2D
 onready var sprite = $Sprite
@@ -102,6 +104,19 @@ func _on_body_entered(body):
 
 func _on_body_exited(body):
 	if trigger_body == body:
+		match(facing):
+			FACING.UP:
+				if body.global_position.y < global_position.y:
+					exited_through = true
+			FACING.DOWN:
+				if body.global_position.y > global_position.y:
+					exited_through = true
+			FACING.LEFT:
+				if body.global_position.x < global_position.x:
+					exited_through = true
+			FACING.RIGHT:
+				if body.global_position.x > global_position.x:
+					exited_through = true
 		trigger_body.disconnect("trigger", self, "_on_door_trigger")
 		trigger_body = null
 		if collision_layer == 0:
@@ -109,6 +124,7 @@ func _on_body_exited(body):
 
 func _on_anim_finished(anim_name):
 	if anim_name == "close":
+		emit_signal("door_closed", exited_through)
 		anim.play("idle")
 
 

@@ -11,7 +11,7 @@
 radius = 4.0
 height = 12.0
 
-[sub_resource type="ShaderMaterial" id=3]
+[sub_resource type="ShaderMaterial" id=2]
 shader = ExtResource( 6 )
 shader_param/pal_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
 shader_param/pal_col_2 = Color( 0.6, 0.6, 0.6, 1 )
@@ -44,7 +44,7 @@ rotation = 1.5708
 shape = SubResource( 1 )
 
 [node name="Sprite" type="Sprite" parent="."]
-material = SubResource( 3 )
+material = SubResource( 2 )
 position = Vector2( 0, -40 )
 scale = Vector2( 4, 4 )
 texture = ExtResource( 1 )
