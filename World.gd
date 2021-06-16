@@ -30,12 +30,13 @@ func _ready():
 			Rect2(-10, -10, 20, 20)
 		],
 		[{
-			"x": 10,
+			"x": 9,
 			"y": 0,
 			"to_ridx": 0,
 			"to_didx": 0
 		}],
-		Vector2(5, 5)
+		Vector2(5, 5),
+		true
 	)
 	
 	#NEM.add_region(

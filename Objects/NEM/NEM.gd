@@ -150,17 +150,17 @@ func _get_tiles(pos : Vector2, radius : float, lridx : int = 0):
 	var reg = regions[living_regions[lridx].ridx]
 	var reg_size = Vector2(reg.width, reg.height)
 	var offset = living_regions[lridx].offset / tile_size
-	var start = -(offset - pos)
+	var start = pos
 	
 	var trad = floor(radius / tile_size)
 	
 	for y in range(start.y - trad, start.y + trad):
 		for x in range(start.x - trad, start.x + trad):
 			var tval = TILE_TYPE.NONE
-			var tpos = Vector2(x, y)
-			var tidx = (y * reg_size.x) + x
-			if x >= 0 and x < reg_size.x and y >= 0 and y < reg_size.y:
-				var dist = tpos.distance_to(start)
+			var tpos = Vector2(x - offset.x, y - offset.y)
+			var tidx = (tpos.y * reg_size.x) + tpos.x
+			if tpos.x >= 0 and tpos.x < reg_size.x and tpos.y >= 0 and tpos.y < reg_size.y:
+				var dist = Vector2(x, y).distance_to(start)
 				if dist < trad:
 					tval = reg.tiles[tidx]
 			tiles.append([living_regions[lridx].ridx, tval, tpos + offset, tidx])
@@ -253,7 +253,7 @@ func is_entity_visible(ent : Node2D) -> bool:
 	return player_node.can_see_node(ent)
 
 
-func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door_list : Array, player_start_pos : Vector2) -> void:
+func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door_list : Array, player_start_pos : Vector2, prnt : bool = false) -> void:
 	var reg = {
 		"floor_color": floor_color,
 		"wall_color": wall_color,
@@ -293,12 +293,10 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 					reg.tiles[index] = TILE_TYPE.FLOOR
 	
 	for didx in range(0, door_list.size()):
-		print("Attempting to store door")
 		var door = door_list[didx]
 		var dx = door.x - container_rect.position.x
 		var dy = door.y - container_rect.position.y
-		print("Dx: ", dx, " | Dy: ", dy, " | Size: ", container_rect.size, " | Pos: ", container_rect.position)
-		if dx >= 0 and dx <= container_rect.size.x and dy >= 0 and dy <= container_rect.size.y:
+		if dx >= 0 and dx < container_rect.size.x and dy >= 0 and dy < container_rect.size.y:
 			var idx = (dy * container_rect.size.x) + dx
 			if reg.tiles[idx] == TILE_TYPE.WALL:
 				var facing = -1 # -1 = Invalid
@@ -308,7 +306,7 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 					idx_l = -1
 					
 				var idx_r = (dy * container_rect.size.y) + (dx + 1)
-				if dx + 1 > container_rect.size.x:
+				if dx + 1 >= container_rect.size.x:
 					idx_r = -1
 					
 				var idx_u = ((dy - 1) * container_rect.size.x) + dx
@@ -316,9 +314,9 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 					idx_u = -1
 					
 				var idx_d = ((dy + 1) * container_rect.size.x) + dx
-				if dy + 1 > container_rect.size.y:
+				if dy + 1 >= container_rect.size.y:
 					idx_d = -1
-					
+				
 				if idx_l >= 0 and idx_r >= 0 and reg.tiles[idx_l] == TILE_TYPE.WALL and reg.tiles[idx_r] == TILE_TYPE.WALL:
 					if idx_u == -1 or reg.tiles[idx_u] == TILE_TYPE.NONE:
 						facing = DoorTile.FACING.UP
@@ -357,6 +355,12 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 			reg.player_start = Vector2(float(px), float(py))
 	
 	regions.append(reg)
+	if prnt:
+		var idx = 0
+		for _i in range(0, reg.height):
+			print(reg.tiles.slice(idx, idx + (reg.width - 1)))
+			idx += reg.width
+	
 	if living_regions.size() <= 0:
 		living_regions.append({
 			"offset":Vector2(0, 0),
@@ -378,10 +382,11 @@ func _on_door_open(dx : float, dy: float, ridx : int, didx : int) -> void:
 		var door_list = regions[ridx].doors
 		for door in door_list:
 			if door.didx == didx:
-				offset.x = (pos.x - (door.x - 1)) * tile_size
-				offset.y = (pos.y - (door.y - 1)) * tile_size
+				offset.x = (pos.x - door.x)
+				offset.y = (pos.y - door.y)
+				#print("Pos: ", pos, " | Door Pos: ", Vector2(door.x, door.y), " | Result: ", offset)
 				living_regions.append({
-					"offset": offset,
+					"offset": offset * tile_size,
 					"ridx": ridx
 				})
 
