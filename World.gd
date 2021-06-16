@@ -27,16 +27,38 @@ func _ready():
 	NEM.add_region(
 		Color(0.25, 1.0, 0.25), Color(1.0, 0.75, 0.25),
 		[
-			Rect2(-10, -10, 20, 20)
+			Rect2(-10, -10, 20, 20),
+			Rect2(8, -10, 20, 9),
+			Rect2(14, -3, 6, 10)
 		],
 		[{
 			"x": 9,
 			"y": 0,
 			"to_ridx": 0,
 			"to_didx": 0
+		},
+		{
+			"x": 14,
+			"y": 2,
+			"to_ridx": 2,
+			"to_didx": 0
+		}
+		],
+		Vector2(5, 5)
+	)
+	
+	NEM.add_region(
+		Color(1.0, 0.25, 0.25), Color(0.75, 1.0, 0.25),
+		[
+			Rect2(0, 0, 20, 20)
+		],
+		[{
+			"x": 19,
+			"y": 5,
+			"to_ridx": 1,
+			"to_didx": 1
 		}],
-		Vector2(5, 5),
-		true
+		Vector2(5, 5)
 	)
 	
 	#NEM.add_region(

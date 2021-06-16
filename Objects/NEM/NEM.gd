@@ -20,6 +20,8 @@ var regions = []
 var living_regions = []
 var living_tiles = {}
 
+var opened_door_info = null
+
 # ---------------------------------------------------------------------------
 # On Ready Variables
 # ---------------------------------------------------------------------------
@@ -37,8 +39,9 @@ func _update_living_tiles() -> void:
 	if living_regions.size() <= 0:
 		return
 	
+	var tiles = _scan_for_living_tiles()
+	_build_from_tiles(tiles)
 	_clear_living_tiles()
-	_scan_for_living_tiles()
 
 
 func _clear_living_tiles() -> void:
@@ -49,6 +52,8 @@ func _clear_living_tiles() -> void:
 			if n.tile is PulseTile or n.tile is DoorTile:
 				var dist = player_node.position.distance_to(n.tile.position)
 				n.tile.alpha = 1.0 - (dist / player_node.sight)
+			else:
+				print("This is odd")
 		else:
 			dkeys.append(key)
 			
@@ -61,7 +66,7 @@ func _clear_living_tiles() -> void:
 		living_tiles.erase(key)
 
 
-func _scan_for_living_tiles() -> void:
+func _scan_for_living_tiles() -> Array:
 	var tiles = []
 	if living_regions.size() == 1:
 		tiles = _get_tiles(player_node.position, player_node.sight)
@@ -74,9 +79,34 @@ func _scan_for_living_tiles() -> void:
 			# TODO: If this is an actual issue, figure out a better solution?
 		else:
 			for idx in range(0, tiles.size()):
+				#if tiles[idx][1] == TILE_TYPE.NONE and tb[idx][1] != TILE_TYPE.NONE:
+				#	tiles[idx] = tb[idx]
+				#elif opened_door_info != null:
+				var doffs = Vector2(
+					(opened_door_info.x * tile_size) - living_regions[0].offset.x,
+					(opened_door_info.y * tile_size) - living_regions[0].offset.y
+				)
+				var swap = false
+				match(opened_door_info.facing):
+					DoorTile.FACING.UP:
+						swap = player_node.position.y < doffs.y
+					DoorTile.FACING.DOWN:
+						swap = player_node.position.y > doffs.y
+					DoorTile.FACING.LEFT:
+						swap = player_node.position.x < doffs.x
+					DoorTile.FACING.RIGHT:
+						swap = player_node.position.x > doffs.x
+				
+				if swap:
+					var t = tiles
+					tiles = tb
+					tb = t
+				
 				if tiles[idx][1] == TILE_TYPE.NONE and tb[idx][1] != TILE_TYPE.NONE:
 					tiles[idx] = tb[idx]
-	
+	return tiles
+
+func _build_from_tiles(tiles : Array) -> void:
 	if tiles.size() > 0:
 		var px = int(player_node.position.x) % int(tile_size)
 		var py = int(player_node.position.y) % int(tile_size)
@@ -88,17 +118,23 @@ func _scan_for_living_tiles() -> void:
 			var ttype = tiles[idx][1]
 			var tpos = tiles[idx][2] * tile_size
 			var tidx = tiles[idx][3]
-			var key = String(tpos.x) + "x" + String(tpos.y)
+			var key = String(int(tpos.x)) + "x" + String(int(tpos.y))
 			
-			if not (key in living_tiles) and is_position_visible(tpos) and ttype != TILE_TYPE.NONE:
+			var allow = true
+			if (key in living_tiles):
+				if opened_door_info == null:
+					allow = false
+				elif living_tiles[key].tile is DoorTile:
+					allow = false
+				else:
+					if living_tiles[key].ridx == ridx or opened_door_info.regdom != ridx:
+						allow = false
+			if allow and is_position_visible(tpos) and ttype != TILE_TYPE.NONE:
 				var tn = null
 				
 				if ttype == TILE_TYPE.DOOR:
-					print("Checking for door")
 					var dinfo = _get_door_info(ridx, tidx)
 					if dinfo != null:
-						if ridx == 1:
-							print("Door TPOS: ", tiles[idx][2], " | DInfo: ", dinfo, " | PPos: ", Vector2(px, py))
 						tn = door_resource.instance()
 						tn.facing = dinfo.facing
 						tn.ridx = dinfo.to_ridx
@@ -107,7 +143,6 @@ func _scan_for_living_tiles() -> void:
 						tn.connect("door_opened", self, "_on_door_open")
 						tn.connect("door_closed", self, "_on_door_closed")
 					else:
-						print("Failed to find door")
 						ttype = TILE_TYPE.WALL
 				
 				if ttype == TILE_TYPE.FLOOR:
@@ -123,6 +158,7 @@ func _scan_for_living_tiles() -> void:
 					floors_node.add_child(tn)
 					tn.position = tpos
 					living_tiles[key] = {"ridx":ridx, "tile":tn}
+
 
 func _get_door_info(ridx : int, tidx : int):
 	var door_list = regions[ridx].doors
@@ -153,6 +189,24 @@ func _get_tiles(pos : Vector2, radius : float, lridx : int = 0):
 	var start = pos
 	
 	var trad = floor(radius / tile_size)
+	var inc_region = Rect2(start.x - trad, start.y - trad, trad*2, trad*2)
+	var treg = false
+	if lridx == 0 and opened_door_info != null:
+		# NOTE: For my own confusion, the actual inclusion regions are INVERTED due to an error in
+		# facing that cannot be fixed quickly (I think).
+		match(opened_door_info.facing):
+			DoorTile.FACING.UP:
+				inc_region = Rect2(start.x - trad, start.y - trad, trad*2, trad)
+			DoorTile.FACING.DOWN:
+				inc_region = Rect2(start.x - trad, start.y, trad*2, trad)
+			DoorTile.FACING.LEFT:
+				inc_region = Rect2(start.x - trad, start.y - trad, trad, trad*2)
+			DoorTile.FACING.RIGHT:
+				inc_region = Rect2(start.x, start.y - trad, trad, trad*2)
+		if living_regions[1].ridx == 2:
+			treg = true
+			#print("Facing: ", regions[1].doors[1].facing)
+			#print("Pos", pos, " | Inc Region: ", inc_region, "Facing: ", opened_door_info.facing)
 	
 	for y in range(start.y - trad, start.y + trad):
 		for x in range(start.x - trad, start.x + trad):
@@ -161,7 +215,10 @@ func _get_tiles(pos : Vector2, radius : float, lridx : int = 0):
 			var tidx = (tpos.y * reg_size.x) + tpos.x
 			if tpos.x >= 0 and tpos.x < reg_size.x and tpos.y >= 0 and tpos.y < reg_size.y:
 				var dist = Vector2(x, y).distance_to(start)
-				if dist < trad:
+				
+				#if treg and not (inc_region.has_point(Vector2(x, y))):
+				#	print("Cannot Store: ", Vector2(x, y))
+				if dist < trad and inc_region.has_point(Vector2(x, y)):
 					tval = reg.tiles[tidx]
 			tiles.append([living_regions[lridx].ridx, tval, tpos + offset, tidx])
 	return tiles
@@ -283,6 +340,9 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 		)
 		var end = Vector2(start.x + rect.size.x, start.y + rect.size.y)
 		
+		if rect.position.x == 14 and rect.position.y == 7:
+			pass
+		
 		for y in range(start.y, end.y):
 			for x in range(start.x, end.x):
 				var index = (y * container_rect.size.x) + x
@@ -305,7 +365,7 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 				if dx - 1 < 0:
 					idx_l = -1
 					
-				var idx_r = (dy * container_rect.size.y) + (dx + 1)
+				var idx_r = (dy * container_rect.size.x) + (dx + 1)
 				if dx + 1 >= container_rect.size.x:
 					idx_r = -1
 					
@@ -330,8 +390,8 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 							facing = DoorTile.FACING.LEFT
 						if idx_r == -1 or reg.tiles[idx_r] == TILE_TYPE.NONE:
 							facing = DoorTile.FACING.RIGHT
-						
-				if facing > -1:
+				
+				if facing >= 0:
 					reg.doors.append({
 						"tidx": idx,
 						"didx": didx,
@@ -382,6 +442,12 @@ func _on_door_open(dx : float, dy: float, ridx : int, didx : int) -> void:
 		var door_list = regions[ridx].doors
 		for door in door_list:
 			if door.didx == didx:
+				opened_door_info = {
+					"x": door.x,
+					"y": door.y,
+					"facing": door.facing,
+					"regdom": 0
+				}
 				offset.x = (pos.x - door.x)
 				offset.y = (pos.y - door.y)
 				#print("Pos: ", pos, " | Door Pos: ", Vector2(door.x, door.y), " | Result: ", offset)
@@ -389,9 +455,11 @@ func _on_door_open(dx : float, dy: float, ridx : int, didx : int) -> void:
 					"offset": offset * tile_size,
 					"ridx": ridx
 				})
+				break
 
 func _on_door_closed(exited_through : bool) -> void:
 	if living_regions.size() > 1:
+		opened_door_info = null
 		if exited_through:
 			living_regions = [living_regions[1]]
 		else:

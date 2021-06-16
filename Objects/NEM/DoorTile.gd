@@ -79,14 +79,16 @@ func _enable_collision(e : bool = true) -> void:
 func get_corners() -> Array:
 	var corners = []
 	if sprite and sprite.texture:
-		var hw = (sprite.texture.get_width() * sprite.scale.x) * 0.5
-		var hh = (sprite.texture.get_height() * sprite.scale.y) * 0.5
+		var w = sprite.texture.get_width() / sprite.hframes
+		var h = sprite.texture.get_height() / sprite.vframes
+		var hw = (w * sprite.scale.x) * 0.5
+		var hh = (h * sprite.scale.y) * 0.5
 		
 		corners = [
-			Vector2((position.x - hw) - 1, (position.y - hh) - 1),
-			Vector2((position.x + hw) + 1, (position.y - hh) - 1),
-			Vector2((position.x + hw) + 1, (position.y + hh) + 1),
-			Vector2((position.x - hw) - 1, (position.y + hh) + 1)
+			global_position + Vector2((sprite.position.x - hw) - 1, (sprite.position.y - hh) - 1),
+			global_position + Vector2((sprite.position.x + hw) + 1, (sprite.position.y - hh) - 1),
+			global_position + Vector2((sprite.position.x + hw) + 1, (sprite.position.y + hh) + 1),
+			global_position + Vector2((sprite.position.x - hw) - 1, (sprite.position.y + hh) + 1)
 		]
 	return corners
 
