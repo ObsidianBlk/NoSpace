@@ -61,8 +61,9 @@ func _clear_living_tiles() -> void:
 		if living_tiles[key].tile is DoorTile:
 			living_tiles[key].tile.disconnect("door_opened", self, "_on_door_opened")
 			living_tiles[key].tile.disconnect("door_closed", self, "_on_door_closed")
-		floors_node.remove_child(living_tiles[key].tile)
-		living_tiles[key].tile.queue_free()
+		living_tiles[key].tile.kill()
+		#floors_node.remove_child(living_tiles[key].tile)
+		#living_tiles[key].tile.queue_free()
 		living_tiles.erase(key)
 
 
@@ -82,25 +83,25 @@ func _scan_for_living_tiles() -> Array:
 				#if tiles[idx][1] == TILE_TYPE.NONE and tb[idx][1] != TILE_TYPE.NONE:
 				#	tiles[idx] = tb[idx]
 				#elif opened_door_info != null:
-				var doffs = Vector2(
-					(opened_door_info.x * tile_size) - living_regions[0].offset.x,
-					(opened_door_info.y * tile_size) - living_regions[0].offset.y
-				)
-				var swap = false
-				match(opened_door_info.facing):
-					DoorTile.FACING.UP:
-						swap = player_node.position.y < doffs.y
-					DoorTile.FACING.DOWN:
-						swap = player_node.position.y > doffs.y
-					DoorTile.FACING.LEFT:
-						swap = player_node.position.x < doffs.x
-					DoorTile.FACING.RIGHT:
-						swap = player_node.position.x > doffs.x
+				#var doffs = Vector2(
+				#	(opened_door_info.x * tile_size) - living_regions[0].offset.x,
+				#	(opened_door_info.y * tile_size) - living_regions[0].offset.y
+				#)
+				#var swap = false
+				#match(opened_door_info.facing):
+				#	DoorTile.FACING.UP:
+				#		swap = player_node.position.y < doffs.y
+				#	DoorTile.FACING.DOWN:
+				#		swap = player_node.position.y > doffs.y
+				#	DoorTile.FACING.LEFT:
+				#		swap = player_node.position.x < doffs.x
+				#	DoorTile.FACING.RIGHT:
+				#		swap = player_node.position.x > doffs.x
 				
-				if swap:
-					var t = tiles
-					tiles = tb
-					tb = t
+				#if swap:
+				#	var t = tiles
+				#	tiles = tb
+				#	tb = t
 				
 				if tiles[idx][1] == TILE_TYPE.NONE and tb[idx][1] != TILE_TYPE.NONE:
 					tiles[idx] = tb[idx]
@@ -120,16 +121,16 @@ func _build_from_tiles(tiles : Array) -> void:
 			var tidx = tiles[idx][3]
 			var key = String(int(tpos.x)) + "x" + String(int(tpos.y))
 			
-			var allow = true
-			if (key in living_tiles):
-				if opened_door_info == null:
-					allow = false
-				elif living_tiles[key].tile is DoorTile:
-					allow = false
-				else:
-					if living_tiles[key].ridx == ridx or opened_door_info.regdom != ridx:
-						allow = false
-			if allow and is_position_visible(tpos) and ttype != TILE_TYPE.NONE:
+			#var allow = true
+			#if (key in living_tiles):
+			#	if opened_door_info == null:
+			#		allow = false
+			#	elif living_tiles[key].tile is DoorTile:
+			#		allow = false
+			#	else:
+			#		if living_tiles[key].ridx == ridx or opened_door_info.regdom != ridx:
+			#			allow = false
+			if not (key in living_tiles) and is_position_visible(tpos) and ttype != TILE_TYPE.NONE:
 				var tn = null
 				
 				if ttype == TILE_TYPE.DOOR:
@@ -403,7 +404,7 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 					})
 					reg.tiles[idx] = TILE_TYPE.DOOR
 					if facing == DoorTile.FACING.UP or facing == DoorTile.FACING.DOWN:
-						reg.tiles[idx_l] = TILE_TYPE.NONE
+						reg.tiles[idx_r] = TILE_TYPE.NONE
 					elif facing == DoorTile.FACING.LEFT or facing == DoorTile.FACING.RIGHT:
 						reg.tiles[idx_u] = TILE_TYPE.NONE
 	

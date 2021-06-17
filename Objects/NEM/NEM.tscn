@@ -9,6 +9,3 @@ script = ExtResource( 1 )
 
 [node name="Ents" type="YSort" parent="."]
 position = Vector2( 0, -1 )
-
-[node name="Viz_cast" type="RayCast2D" parent="."]
-enabled = true

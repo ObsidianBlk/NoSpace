@@ -1,5 +1,5 @@
 tool
-extends StaticBody2D
+extends "res://Scripts/Tile.gd"
 class_name PulseTile
 
 export var color : Color = Color(1.0, 1.0, 1.0, 1.0)	setget _set_color
@@ -11,6 +11,7 @@ export (float, 0.0, 1.0) var rim_fade = 0.5				setget _set_rim_fade
 export var collision_enabled : bool = false				setget _set_collision_enabled
 
 var ready = false
+var dying = -1
 
 onready var sparams = $Sprite.get_material()
 onready var colshape_node = $CollisionShape2D
@@ -58,6 +59,7 @@ func _set_collision_enabled(e : bool) -> void:
 
 func _ready() -> void:
 	ready = true
+	set_process(false)
 	_set_color(color)
 	_set_base_intensity(base_intensity)
 	_set_overall_intensity(overall_intensity)
@@ -66,6 +68,17 @@ func _ready() -> void:
 	_set_rim_fade(rim_fade)
 	_set_collision_enabled(collision_enabled)
 
+func _process(delta : float) -> void:
+	dying -= delta * 2
+	if dying < 0.0:
+		set_process(false)
+		.kill()
+	else:
+		self.alpha = dying
+
+func kill() -> void:
+	dying = 1.0
+	set_process(true)
 
 func get_corners() -> Array:
 	var corners = []

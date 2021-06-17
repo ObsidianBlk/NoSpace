@@ -1,0 +1,44 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://Assets/Graphics/Character.png" type="Texture" id=1]
+[ext_resource path="res://Shaders/PalSwap4.shader" type="Shader" id=2]
+[ext_resource path="res://Assets/Graphics/smoke.png" type="Texture" id=3]
+
+[sub_resource type="ShaderMaterial" id=1]
+shader = ExtResource( 2 )
+shader_param/pal_col_1 = Color( 0.623529, 0.713726, 0.776471, 1 )
+shader_param/pal_col_2 = Color( 0.501961, 0.619608, 0.701961, 1 )
+shader_param/pal_col_3 = Color( 0.74902, 0.811765, 0.85098, 1 )
+shader_param/pal_col_4 = Color( 0, 0, 0, 1 )
+shader_param/replace_col_1 = Color( 0.254902, 0.254902, 0.254902, 1 )
+shader_param/replace_col_2 = Color( 0.160784, 0.160784, 0.160784, 1 )
+shader_param/replace_col_3 = Color( 0.364706, 0.364706, 0.364706, 1 )
+shader_param/replace_col_4 = Color( 0, 0, 0, 1 )
+shader_param/precision = 0.1
+shader_param/alpha = 1.0
+
+[sub_resource type="ParticlesMaterial" id=2]
+emission_shape = 1
+emission_sphere_radius = 1.0
+flag_disable_z = true
+gravity = Vector3( 0, 0, 0 )
+orbit_velocity = 0.0
+orbit_velocity_random = 0.0
+radial_accel = 32.0
+radial_accel_random = 0.41
+scale_random = 0.5
+color = Color( 0.266667, 0.266667, 0.266667, 0.541176 )
+
+[node name="Spectre" type="Node2D"]
+
+[node name="Sprite" type="Sprite" parent="."]
+material = SubResource( 1 )
+position = Vector2( 0, -40 )
+scale = Vector2( 4, 4 )
+texture = ExtResource( 1 )
+hframes = 18
+
+[node name="Particles2D" type="Particles2D" parent="."]
+amount = 30
+process_material = SubResource( 2 )
+texture = ExtResource( 3 )

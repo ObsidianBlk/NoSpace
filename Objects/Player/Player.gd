@@ -18,8 +18,11 @@ var motion : Array = [0,0,0,0]
 
 var triggered = false
 
+var facing = DIRECTION.DOWN
+
 onready var vizcast_node = $Vizcast
-onready var vizcast2_node = $Vizcast2
+onready var sprite = $Sprite
+onready var anim = $Anim
 
 func _set_sight(s : int) -> void:
 	if s > 0:
@@ -96,6 +99,17 @@ func can_see_node(n : Node2D) -> bool:
 					return true
 	return false
 
+func play_animation(anim_name : String) -> void:
+	if anim:
+		anim.stop()
+		anim.play(anim_name)
+
+func flip_sprite(f : bool = true) -> void:
+	sprite.flip_h = f
+
+func get_facing() -> int:
+	return facing
+
 func trigger(e : bool = true) -> void:
 	if triggered != e:
 		triggered = e
@@ -121,5 +135,16 @@ func update_movement(delta : float) -> void:
 			velocity = Vector2.ZERO
 	
 	velocity = move_and_slide(velocity)
+	if velocity.length() > 0.5:
+		if abs(velocity.x) > abs(velocity.y):
+			if velocity.x < 0:
+				facing = DIRECTION.LEFT
+			else:
+				facing = DIRECTION.RIGHT
+		else:
+			if velocity.y < 0:
+				facing = DIRECTION.UP
+			else:
+				facing = DIRECTION.DOWN
 
 

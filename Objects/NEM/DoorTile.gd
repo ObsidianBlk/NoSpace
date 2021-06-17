@@ -1,5 +1,5 @@
 tool
-extends StaticBody2D
+extends "res://Scripts/Tile.gd"
 class_name DoorTile
 
 signal door_opened(dx, dy, ridx, didx)

@@ -20,7 +20,20 @@ func _ready():
 			"y":4,
 			"to_ridx":1,
 			"to_didx":0
-		}],
+		},
+		{
+			"x": 10,
+			"y": 0,
+			"to_ridx": 2,
+			"to_didx": 1
+		},
+		{
+			"x": 10,
+			"y": 34,
+			"to_ridx": 1,
+			"to_didx": 0
+		}
+		],
 		Vector2(5, 5)
 	)
 	
@@ -57,7 +70,14 @@ func _ready():
 			"y": 5,
 			"to_ridx": 1,
 			"to_didx": 1
-		}],
+		},
+		{
+			"x": 15,
+			"y": 19,
+			"to_ridx": 0,
+			"to_didx": 1
+		}
+		],
 		Vector2(5, 5)
 	)
 	
