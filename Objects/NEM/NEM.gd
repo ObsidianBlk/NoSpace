@@ -11,6 +11,7 @@ enum TILE_TYPE {NONE = 0, FLOOR = 1, WALL = 2, DOOR = 3}
 # ---------------------------------------------------------------------------
 var tile_resource = preload("res://Objects/NEM/PulseTile.tscn")
 var door_resource = preload("res://Objects/NEM/DoorTile.tscn")
+var carrot_resource = preload("res://Objects/Carrot/Carrot.tscn")
 var tile_size = 32
 
 var player_node = null
@@ -62,6 +63,8 @@ func _clear_living_tiles() -> void:
 			living_tiles[key].tile.disconnect("door_opened", self, "_on_door_opened")
 			living_tiles[key].tile.disconnect("door_closed", self, "_on_door_closed")
 		living_tiles[key].tile.kill()
+		if living_tiles[key].carrot != null:
+			living_tiles[key].carrot.kill()
 		#floors_node.remove_child(living_tiles[key].tile)
 		#living_tiles[key].tile.queue_free()
 		living_tiles.erase(key)
@@ -103,7 +106,7 @@ func _scan_for_living_tiles() -> Array:
 				#	tiles = tb
 				#	tb = t
 				
-				if tiles[idx][1] == TILE_TYPE.NONE and tb[idx][1] != TILE_TYPE.NONE:
+				if tiles[idx].type == TILE_TYPE.NONE and tb[idx].type != TILE_TYPE.NONE:
 					tiles[idx] = tb[idx]
 	return tiles
 
@@ -115,10 +118,11 @@ func _build_from_tiles(tiles : Array) -> void:
 		var start = Vector2(px - rad, py - rad)
 
 		for idx in range(0, tiles.size()):
-			var ridx = tiles[idx][0]
-			var ttype = tiles[idx][1]
-			var tpos = tiles[idx][2] * tile_size
-			var tidx = tiles[idx][3]
+			var ridx = tiles[idx].ridx
+			var ttype = tiles[idx].type
+			var tpos = tiles[idx].position * tile_size
+			var tidx = tiles[idx].tidx
+			var carrot_idx = tiles[idx].carrot_idx
 			var key = String(int(tpos.x)) + "x" + String(int(tpos.y))
 			
 			#var allow = true
@@ -132,6 +136,7 @@ func _build_from_tiles(tiles : Array) -> void:
 			#			allow = false
 			if not (key in living_tiles) and is_position_visible(tpos) and ttype != TILE_TYPE.NONE:
 				var tn = null
+				var carrot = null
 				
 				if ttype == TILE_TYPE.DOOR:
 					var dinfo = _get_door_info(ridx, tidx)
@@ -152,6 +157,13 @@ func _build_from_tiles(tiles : Array) -> void:
 				if ttype == TILE_TYPE.FLOOR:
 					tn = tile_resource.instance()
 					tn.color = regions[ridx].floor_color
+					if carrot_idx >= 0:
+						carrot = carrot_resource.instance()
+						carrot.position = tpos
+						carrot.ridx = ridx
+						carrot.idx = carrot_idx
+						carrot.connect("carrot_picked_up", self, "_on_carrot_pickup")
+						ents_node.add_child(carrot)
 				elif ttype == TILE_TYPE.WALL:
 					tn = tile_resource.instance()
 					tn.color = regions[ridx].wall_color
@@ -161,7 +173,7 @@ func _build_from_tiles(tiles : Array) -> void:
 				if tn != null:
 					floors_node.add_child(tn)
 					tn.position = tpos
-					living_tiles[key] = {"ridx":ridx, "tile":tn}
+					living_tiles[key] = {"ridx":ridx, "tile":tn, "carrot":carrot}
 
 
 func _get_door_info(ridx : int, tidx : int):
@@ -220,12 +232,38 @@ func _get_tiles(pos : Vector2, radius : float, lridx : int = 0):
 			if tpos.x >= 0 and tpos.x < reg_size.x and tpos.y >= 0 and tpos.y < reg_size.y:
 				var dist = Vector2(x, y).distance_to(start)
 				
-				#if treg and not (inc_region.has_point(Vector2(x, y))):
-				#	print("Cannot Store: ", Vector2(x, y))
 				if dist < trad and inc_region.has_point(Vector2(x, y)):
 					tval = reg.tiles[tidx]
-			tiles.append([living_regions[lridx].ridx, tval, tpos + offset, tidx])
+			#tiles.append([living_regions[lridx].ridx, tval, tpos + offset, tidx])
+			tiles.append({
+				"ridx": living_regions[lridx].ridx,
+				"type": tval,
+				"position": tpos + offset,
+				"tidx": tidx,
+				"carrot_idx": _get_carrot_index(lridx, (tpos + offset) * tile_size)
+			})
 	return tiles
+
+func _get_carrot_index(lridx : int, pos: Vector2) -> int:
+	if lridx >= 0 and lridx < living_regions.size():
+		var carrot_list = regions[living_regions[lridx].ridx].carrots
+		var offset = living_regions[lridx].offset
+		for i in range(0, carrot_list.size()):
+			var carrot = carrot_list[i]
+			var cpos = (carrot.position * tile_size) + offset
+			if not carrot.eaten and cpos == pos:
+				return i
+	return -1
+
+func _has_carrot(lridx : int, pos : Vector2) -> bool:
+	if lridx >= 0 and lridx < living_regions.size():
+		var carrot_list = regions[living_regions[lridx].ridx].carrots
+		var offset = living_regions[lridx].offset
+		for carrot in carrot_list:
+			var cpos = (carrot.position * tile_size) + offset
+			if not carrot.eaten and cpos == pos:
+				return true
+	return false
 
 func _is_region_alive(ridx : int) -> bool:
 	for lr in living_regions:
@@ -322,6 +360,7 @@ func add_region(data, prnt : bool = false) -> void:
 		"width": 0,
 		"height": 0,
 		"player_start": null,
+		"carrots": [],
 		"doors": [],
 		"tiles":null
 	}
@@ -419,6 +458,19 @@ func add_region(data, prnt : bool = false) -> void:
 		if reg.tiles[pidx] == TILE_TYPE.FLOOR:
 			reg.player_start = Vector2(float(px), float(py))
 	
+	var carrots = data.get("carrots")
+	if carrots != null:
+		for carrot in carrots:
+			carrot = carrot - container_rect.position
+			if Rect2(Vector2.ZERO, container_rect.size).has_point(carrot):
+				var idx = (carrot.y * container_rect.size.x) + carrot.x
+				if reg.tiles[idx] == TILE_TYPE.FLOOR:
+					reg.carrots.append({
+						"eaten": false,
+						"position": carrot,
+						"entity": null
+					})
+	
 	regions.append(reg)
 	if prnt:
 		var idx = 0
@@ -470,4 +522,9 @@ func _on_door_closed(exited_through : bool) -> void:
 			living_regions = [living_regions[1]]
 		else:
 			living_regions = [living_regions[0]]
+
+func _on_carrot_pickup(ridx, cidx) -> void:
+	if ridx >= 0 and ridx < regions.size():
+		if cidx >= 0 and cidx < regions[ridx].carrots.size():
+			regions[ridx].carrots[cidx].eaten = true
 

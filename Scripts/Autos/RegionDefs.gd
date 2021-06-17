@@ -59,9 +59,13 @@ const REGIONS = {
 		"floor_color": Color(0.25, 0.25, 1.0),
 		"wall_color": Color(0.25, 0.75, 1.0),
 		"rect_list":[
-			Rect2(15,15,2,2),
 			Rect2(0, 0, 30, 30),
 			Rect2(10, 28, 6, 15)
+		],
+		"carrots":[
+			Vector2(4, 10),
+			Vector2(28, 28),
+			Vector2(12, 38)
 		],
 		"door_list": [
 		{
@@ -200,12 +204,18 @@ func _gen_regions(rname : String, depth : int = 4) -> int:
 			"wall_color": REGIONS[rname].wall_color,
 			"rect_list": [],
 			"door_list": [],
+			"carrots": [],
 			"player_start": REGIONS[rname].player_start
 		}
 		reg_list.append(reg)
 		
 		for rect in REGIONS[rname].rect_list:
 			reg.rect_list.append(rect)
+		
+		var carrot_list = REGIONS[rname].get("carrots")
+		if carrot_list != null:
+			for carrot in carrot_list:
+				reg.carrots.append(carrot)
 
 		var didx = 0
 		for door in REGIONS[rname].door_list:
@@ -240,7 +250,6 @@ func _link_any_doors() -> void:
 			hubdoor[1].to_didx = anydoor[1].didx
 			anydoor[1].to_ridx = 0
 			anydoor[1].to_didx = hubdoor[1].didx
-			print("Connected hub door ( ", hubdoor, " ) to ( ", anydoor, ")")
 			any_doors.remove(adidx)
 			hub_linkback = true
 		else:
