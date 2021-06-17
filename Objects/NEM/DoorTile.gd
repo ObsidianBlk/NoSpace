@@ -10,6 +10,7 @@ enum FACING {UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3}
 export var color : Color = Color(0.7, 0.7, 0.7, 1.0)	setget _set_color
 export (float, 0.0, 1.0) var alpha = 1.0				setget _set_alpha
 export (FACING) var facing = FACING.UP					setget _set_facing
+export var locked : bool = false
 export var ridx : int = -1
 export var didx : int = -1
 
@@ -95,7 +96,7 @@ func get_corners() -> Array:
 
 
 func _on_door_trigger():
-	if collision_layer == 1:
+	if collision_layer == 1 and not locked:
 		anim.play("open")
 		emit_signal("door_opened", position.x, position.y, ridx, didx)
 

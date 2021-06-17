@@ -42,6 +42,10 @@ config/name="No Space"
 run/main_scene="res://World.tscn"
 config/icon="res://icon.png"
 
+[autoload]
+
+RegionDefs="*res://Scripts/Autos/RegionDefs.gd"
+
 [display]
 
 window/size/width=1920

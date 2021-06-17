@@ -138,8 +138,11 @@ func _build_from_tiles(tiles : Array) -> void:
 					if dinfo != null:
 						tn = door_resource.instance()
 						tn.facing = dinfo.facing
-						tn.ridx = dinfo.to_ridx
-						tn.didx = dinfo.to_didx
+						if dinfo.to_ridx >= 0 and dinfo.to_didx >= 0:
+							tn.ridx = dinfo.to_ridx
+							tn.didx = dinfo.to_didx
+						else:
+							tn.locked = true
 						tn.color = regions[ridx].wall_color
 						tn.connect("door_opened", self, "_on_door_open")
 						tn.connect("door_closed", self, "_on_door_closed")
@@ -164,7 +167,7 @@ func _build_from_tiles(tiles : Array) -> void:
 func _get_door_info(ridx : int, tidx : int):
 	var door_list = regions[ridx].doors
 	for door in door_list:
-		if door.tidx == tidx and _door_exists(door.to_ridx, door.to_didx):
+		if door.tidx == tidx:
 			return door
 	return null
 
@@ -311,10 +314,11 @@ func is_entity_visible(ent : Node2D) -> bool:
 	return player_node.can_see_node(ent)
 
 
-func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door_list : Array, player_start_pos : Vector2, prnt : bool = false) -> void:
+func add_region(data, prnt : bool = false) -> void:
 	var reg = {
-		"floor_color": floor_color,
-		"wall_color": wall_color,
+		"name": data.name,
+		"floor_color": data.floor_color,
+		"wall_color": data.wall_color,
 		"width": 0,
 		"height": 0,
 		"player_start": null,
@@ -323,7 +327,7 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 	}
 	
 	var container_rect = Rect2(0, 0, 0, 0)
-	for rect in rect_list:
+	for rect in data.rect_list:
 		container_rect = container_rect.merge(rect)
 	reg.width = container_rect.size.x
 	reg.height = container_rect.size.y
@@ -334,7 +338,7 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 	for _i in range(0, container_rect.size.x * container_rect.size.y):
 		reg.tiles.append(TILE_TYPE.NONE)
 	
-	for rect in rect_list:
+	for rect in data.rect_list:
 		var start = Vector2(
 			rect.position.x - container_rect.position.x,
 			rect.position.y - container_rect.position.y
@@ -353,14 +357,14 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 				else:
 					reg.tiles[index] = TILE_TYPE.FLOOR
 	
-	for didx in range(0, door_list.size()):
-		var door = door_list[didx]
+	for didx in range(0, data.door_list.size()):
+		var door = data.door_list[didx]
 		var dx = door.x - container_rect.position.x
 		var dy = door.y - container_rect.position.y
 		if dx >= 0 and dx < container_rect.size.x and dy >= 0 and dy < container_rect.size.y:
 			var idx = (dy * container_rect.size.x) + dx
 			if reg.tiles[idx] == TILE_TYPE.WALL:
-				var facing = -1 # -1 = Invalid
+				#var facing = -1 # -1 = Invalid
 				
 				var idx_l = (dy * container_rect.size.x) + (dx - 1)
 				if dx - 1 < 0:
@@ -378,38 +382,38 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 				if dy + 1 >= container_rect.size.y:
 					idx_d = -1
 				
-				if idx_l >= 0 and idx_r >= 0 and reg.tiles[idx_l] == TILE_TYPE.WALL and reg.tiles[idx_r] == TILE_TYPE.WALL:
-					if idx_u == -1 or reg.tiles[idx_u] == TILE_TYPE.NONE:
-						facing = DoorTile.FACING.UP
-					elif idx_d == -1 or reg.tiles[idx_d] == TILE_TYPE.NONE:
-						facing = DoorTile.FACING.DOWN
-					
+#				if idx_l >= 0 and idx_r >= 0 and reg.tiles[idx_l] == TILE_TYPE.WALL and reg.tiles[idx_r] == TILE_TYPE.WALL:
+#					if idx_u == -1 or reg.tiles[idx_u] == TILE_TYPE.NONE:
+#						facing = DoorTile.FACING.UP
+#					elif idx_d == -1 or reg.tiles[idx_d] == TILE_TYPE.NONE:
+#						facing = DoorTile.FACING.DOWN
+#
+#
+#				if facing < 0:
+#					if idx_u >= 0 and idx_d >= 0 and reg.tiles[idx_u] == TILE_TYPE.WALL and reg.tiles[idx_d] == TILE_TYPE.WALL:
+#						if idx_l == -1 or reg.tiles[idx_l] == TILE_TYPE.NONE:
+#							facing = DoorTile.FACING.LEFT
+#						if idx_r == -1 or reg.tiles[idx_r] == TILE_TYPE.NONE:
+#							facing = DoorTile.FACING.RIGHT
 				
-				if facing < 0:
-					if idx_u >= 0 and idx_d >= 0 and reg.tiles[idx_u] == TILE_TYPE.WALL and reg.tiles[idx_d] == TILE_TYPE.WALL:
-						if idx_l == -1 or reg.tiles[idx_l] == TILE_TYPE.NONE:
-							facing = DoorTile.FACING.LEFT
-						if idx_r == -1 or reg.tiles[idx_r] == TILE_TYPE.NONE:
-							facing = DoorTile.FACING.RIGHT
-				
-				if facing >= 0:
+				if door.facing >= 0:
 					reg.doors.append({
 						"tidx": idx,
 						"didx": didx,
 						"x":dx,
 						"y":dy,
-						"facing": facing,
+						"facing": door.facing,
 						"to_ridx":door.to_ridx,
 						"to_didx":door.to_didx
 					})
 					reg.tiles[idx] = TILE_TYPE.DOOR
-					if facing == DoorTile.FACING.UP or facing == DoorTile.FACING.DOWN:
+					if door.facing == DoorTile.FACING.UP or door.facing == DoorTile.FACING.DOWN:
 						reg.tiles[idx_r] = TILE_TYPE.NONE
-					elif facing == DoorTile.FACING.LEFT or facing == DoorTile.FACING.RIGHT:
+					elif door.facing == DoorTile.FACING.LEFT or door.facing == DoorTile.FACING.RIGHT:
 						reg.tiles[idx_u] = TILE_TYPE.NONE
 	
-	var px = int(player_start_pos.x) - container_rect.position.x
-	var py = int(player_start_pos.y) - container_rect.position.y
+	var px = int(data.player_start.x) - container_rect.position.x
+	var py = int(data.player_start.y) - container_rect.position.y
 	if px >= 0 and px < container_rect.size.x and py > 0 and py < container_rect.size.y:
 		var pidx = (py * container_rect.size.x) + px
 		if reg.tiles[pidx] == TILE_TYPE.FLOOR:
@@ -427,6 +431,7 @@ func add_region(floor_color : Color, wall_color : Color, rect_list : Array, door
 			"offset":Vector2(0, 0),
 			"ridx": regions.size() - 1
 		})
+
 
 
 # ---------------------------------------------------------------------------

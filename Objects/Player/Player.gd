@@ -3,6 +3,8 @@ class_name Player
 
 
 signal trigger
+signal carrot_count_change(new_count)
+signal stamina_change(new_val, max_val)
 
 enum DIRECTION {UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3}
 
@@ -11,14 +13,17 @@ export var speed : float = 200.0				setget _set_speed
 export var friction : float = 0.1				setget _set_friction
 export var acceleration : float = 0.2			setget _set_acceleration
 export var vel_threshold : float = 4.0			setget _set_vel_threshold
+export var max_stamina : float = 100.0			setget _set_max_stamina
 
 var velocity : Vector2 = Vector2.ZERO
 var direction : Vector2 = Vector2.ZERO
 var motion : Array = [0,0,0,0]
 
 var triggered = false
-
 var facing = DIRECTION.DOWN
+
+var carrot_count = 0
+var stamina = 100.0
 
 onready var vizcast_node = $Vizcast
 onready var sprite = $Sprite
@@ -43,6 +48,13 @@ func _set_acceleration(a : float) -> void:
 func _set_vel_threshold(t : float) -> void:
 	if t > 0.0:
 		vel_threshold = t
+
+func _set_max_stamina(s : float) -> void:
+	if s > 0.0:
+		max_stamina = s
+		if max_stamina < stamina:
+			stamina = max_stamina
+		emit_signal("stamina_change", stamina, max_stamina)
 
 func _update_direction() -> void:
 	direction.x = motion[DIRECTION.RIGHT] - motion[DIRECTION.LEFT]
@@ -106,6 +118,26 @@ func play_animation(anim_name : String) -> void:
 
 func flip_sprite(f : bool = true) -> void:
 	sprite.flip_h = f
+
+func pickup_carrot() -> void:
+	carrot_count += 1
+	emit_signal("carrot_count_change", carrot_count)
+
+func consume_carrot() -> void:
+	if carrot_count > 0:
+		carrot_count -= 1
+		stamina += 10.0
+		if stamina > max_stamina:
+			stamina = max_stamina
+		emit_signal("stamina_change", stamina, max_stamina)
+		emit_signal("carrot_count_change", carrot_count)
+
+func get_carrot_count() -> int:
+	return carrot_count
+
+func clear_carrots() -> void:
+	carrot_count = 0
+	emit_signal("carrot_count_change", carrot_count)
 
 func get_facing() -> int:
 	return facing
