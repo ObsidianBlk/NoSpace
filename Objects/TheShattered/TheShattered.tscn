@@ -1,0 +1,105 @@
+[gd_scene load_steps=9 format=2]
+
+[ext_resource path="res://Shaders/PalSwap4.shader" type="Shader" id=1]
+[ext_resource path="res://Assets/Graphics/Shattered.png" type="Texture" id=2]
+[ext_resource path="res://Objects/TheShattered/TheShattered.gd" type="Script" id=3]
+
+[sub_resource type="ShaderMaterial" id=1]
+resource_local_to_scene = true
+shader = ExtResource( 1 )
+shader_param/pal_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
+shader_param/pal_col_2 = Color( 0.6, 0.6, 0.6, 1 )
+shader_param/pal_col_3 = Color( 0.8, 0.8, 0.8, 1 )
+shader_param/pal_col_4 = Color( 0, 0, 0, 1 )
+shader_param/replace_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
+shader_param/replace_col_2 = Color( 0.6, 0.6, 0.6, 1 )
+shader_param/replace_col_3 = Color( 0.8, 0.8, 0.8, 1 )
+shader_param/replace_col_4 = Color( 0, 0, 0, 1 )
+shader_param/precision = 0.1
+shader_param/alpha = 1.0
+
+[sub_resource type="ShaderMaterial" id=2]
+resource_local_to_scene = true
+shader = ExtResource( 1 )
+shader_param/pal_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
+shader_param/pal_col_2 = Color( 0.6, 0.6, 0.6, 1 )
+shader_param/pal_col_3 = Color( 0.8, 0.8, 0.8, 1 )
+shader_param/pal_col_4 = Color( 0, 0, 0, 1 )
+shader_param/replace_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
+shader_param/replace_col_2 = Color( 0.6, 0.6, 0.6, 1 )
+shader_param/replace_col_3 = Color( 0.8, 0.8, 0.8, 1 )
+shader_param/replace_col_4 = Color( 0, 0, 0, 1 )
+shader_param/precision = 0.1
+shader_param/alpha = 1.0
+
+[sub_resource type="ShaderMaterial" id=3]
+resource_local_to_scene = true
+shader = ExtResource( 1 )
+shader_param/pal_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
+shader_param/pal_col_2 = Color( 0.6, 0.6, 0.6, 1 )
+shader_param/pal_col_3 = Color( 0.8, 0.8, 0.8, 1 )
+shader_param/pal_col_4 = Color( 0, 0, 0, 1 )
+shader_param/replace_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
+shader_param/replace_col_2 = Color( 0.6, 0.6, 0.6, 1 )
+shader_param/replace_col_3 = Color( 0.8, 0.8, 0.8, 1 )
+shader_param/replace_col_4 = Color( 0, 0, 0, 1 )
+shader_param/precision = 0.1
+shader_param/alpha = 1.0
+
+[sub_resource type="ShaderMaterial" id=4]
+resource_local_to_scene = true
+shader = ExtResource( 1 )
+shader_param/pal_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
+shader_param/pal_col_2 = Color( 0.6, 0.6, 0.6, 1 )
+shader_param/pal_col_3 = Color( 0.8, 0.8, 0.8, 1 )
+shader_param/pal_col_4 = Color( 0, 0, 0, 1 )
+shader_param/replace_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
+shader_param/replace_col_2 = Color( 0.6, 0.6, 0.6, 1 )
+shader_param/replace_col_3 = Color( 0.8, 0.8, 0.8, 1 )
+shader_param/replace_col_4 = Color( 0, 0, 0, 1 )
+shader_param/precision = 0.1
+shader_param/alpha = 1.0
+
+[sub_resource type="CircleShape2D" id=5]
+radius = 32.0
+
+[node name="TheShattered" type="Node2D"]
+script = ExtResource( 3 )
+
+[node name="Base" type="Sprite" parent="."]
+material = SubResource( 1 )
+position = Vector2( 0, -16 )
+texture = ExtResource( 2 )
+region_enabled = true
+region_rect = Rect2( 0, 0, 32, 32 )
+
+[node name="Body" type="Sprite" parent="."]
+material = SubResource( 2 )
+position = Vector2( 0, -25 )
+texture = ExtResource( 2 )
+region_enabled = true
+region_rect = Rect2( 32, 0, 32, 32 )
+
+[node name="RightEye" type="Sprite" parent="."]
+material = SubResource( 3 )
+position = Vector2( 13.8748, -33.8294 )
+texture = ExtResource( 2 )
+region_enabled = true
+region_rect = Rect2( 64, 0, 32, 32 )
+
+[node name="LeftEye" type="Sprite" parent="."]
+material = SubResource( 4 )
+position = Vector2( -17.6588, -21.6364 )
+texture = ExtResource( 2 )
+region_enabled = true
+region_rect = Rect2( 96, 0, 32, 32 )
+
+[node name="Area2D" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 32
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource( 5 )
+
+[connection signal="body_entered" from="Area2D" to="." method="_on_body_entered"]
+[connection signal="body_exited" from="Area2D" to="." method="_on_body_exited"]

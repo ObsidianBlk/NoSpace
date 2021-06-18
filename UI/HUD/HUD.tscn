@@ -1,0 +1,132 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://Theme/core_theme.tres" type="Theme" id=1]
+[ext_resource path="res://Theme/Fonts/Potra_48_DynFont.tres" type="DynamicFont" id=2]
+[ext_resource path="res://Assets/Graphics/Char_Icon.png" type="Texture" id=3]
+[ext_resource path="res://Assets/Graphics/carrot.png" type="Texture" id=4]
+[ext_resource path="res://UI/HUD/HUD.gd" type="Script" id=5]
+
+[node name="HUD" type="MarginContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource( 1 )
+custom_constants/margin_right = 40
+custom_constants/margin_top = 40
+custom_constants/margin_left = 40
+custom_constants/margin_bottom = 40
+script = ExtResource( 5 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBC" type="VBoxContainer" parent="."]
+margin_left = 40.0
+margin_top = 40.0
+margin_right = 1880.0
+margin_bottom = 1040.0
+
+[node name="PanelContainer" type="PanelContainer" parent="VBC"]
+margin_right = 1840.0
+margin_bottom = 12.0
+
+[node name="Container" type="Container" parent="VBC"]
+margin_top = 16.0
+margin_right = 1840.0
+margin_bottom = 847.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Information" type="PanelContainer" parent="VBC"]
+margin_top = 851.0
+margin_right = 711.0
+margin_bottom = 1000.0
+size_flags_horizontal = 0
+
+[node name="HBC" type="HBoxContainer" parent="VBC/Information"]
+margin_left = 6.0
+margin_top = 6.0
+margin_right = 705.0
+margin_bottom = 143.0
+
+[node name="Stats" type="MarginContainer" parent="VBC/Information/HBC"]
+margin_right = 294.0
+margin_bottom = 137.0
+custom_constants/margin_right = 4
+custom_constants/margin_top = 4
+custom_constants/margin_left = 4
+custom_constants/margin_bottom = 4
+
+[node name="VBC" type="VBoxContainer" parent="VBC/Information/HBC/Stats"]
+margin_left = 4.0
+margin_top = 4.0
+margin_right = 290.0
+margin_bottom = 133.0
+
+[node name="Carrots" type="HBoxContainer" parent="VBC/Information/HBC/Stats/VBC"]
+margin_right = 286.0
+margin_bottom = 62.0
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBC/Information/HBC/Stats/VBC/Carrots"]
+margin_right = 32.0
+margin_bottom = 62.0
+rect_min_size = Vector2( 32, 32 )
+texture = ExtResource( 4 )
+expand = true
+stretch_mode = 6
+
+[node name="Label" type="Label" parent="VBC/Information/HBC/Stats/VBC/Carrots"]
+margin_left = 36.0
+margin_right = 74.0
+margin_bottom = 62.0
+size_flags_vertical = 5
+text = ":0"
+valign = 1
+
+[node name="Stamina" type="HBoxContainer" parent="VBC/Information/HBC/Stats/VBC"]
+margin_top = 66.0
+margin_right = 286.0
+margin_bottom = 129.0
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBC/Information/HBC/Stats/VBC/Stamina"]
+margin_right = 32.0
+margin_bottom = 63.0
+rect_min_size = Vector2( 32, 32 )
+texture = ExtResource( 3 )
+expand = true
+stretch_mode = 6
+
+[node name="Progress" type="CenterContainer" parent="VBC/Information/HBC/Stats/VBC/Stamina"]
+margin_left = 36.0
+margin_right = 286.0
+margin_bottom = 63.0
+
+[node name="Bar" type="ProgressBar" parent="VBC/Information/HBC/Stats/VBC/Stamina/Progress"]
+margin_top = 21.0
+margin_right = 250.0
+margin_bottom = 41.0
+rect_min_size = Vector2( 250, 20 )
+percent_visible = false
+
+[node name="VSeparator" type="VSeparator" parent="VBC/Information/HBC"]
+margin_left = 298.0
+margin_right = 302.0
+margin_bottom = 137.0
+
+[node name="Region" type="MarginContainer" parent="VBC/Information/HBC"]
+margin_left = 306.0
+margin_right = 699.0
+margin_bottom = 137.0
+custom_constants/margin_right = 40
+custom_constants/margin_top = 40
+custom_constants/margin_left = 40
+custom_constants/margin_bottom = 40
+
+[node name="Label" type="Label" parent="VBC/Information/HBC/Region"]
+margin_left = 40.0
+margin_top = 40.0
+margin_right = 353.0
+margin_bottom = 97.0
+custom_fonts/font = ExtResource( 2 )
+text = "Region Name"

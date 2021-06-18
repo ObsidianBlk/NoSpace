@@ -2,6 +2,12 @@ tool
 extends Node2D
 
 # ---------------------------------------------------------------------------
+# Signals
+# ---------------------------------------------------------------------------
+
+signal region_change(rname)
+
+# ---------------------------------------------------------------------------
 # ENUM Definitions
 # ---------------------------------------------------------------------------
 enum TILE_TYPE {NONE = 0, FLOOR = 1, WALL = 2, DOOR = 3}
@@ -229,41 +235,24 @@ func _get_tiles(pos : Vector2, radius : float, lridx : int = 0):
 			var tval = TILE_TYPE.NONE
 			var tpos = Vector2(x - offset.x, y - offset.y)
 			var tidx = (tpos.y * reg_size.x) + tpos.x
+			var carrot_idx = -1
 			if tpos.x >= 0 and tpos.x < reg_size.x and tpos.y >= 0 and tpos.y < reg_size.y:
 				var dist = Vector2(x, y).distance_to(start)
 				
 				if dist < trad and inc_region.has_point(Vector2(x, y)):
 					tval = reg.tiles[tidx]
+					for i in range(0, reg.carrots.size()):
+						if not reg.carrots[i].eaten and reg.carrots[i].position == tpos:
+							carrot_idx = i
 			#tiles.append([living_regions[lridx].ridx, tval, tpos + offset, tidx])
 			tiles.append({
 				"ridx": living_regions[lridx].ridx,
 				"type": tval,
 				"position": tpos + offset,
 				"tidx": tidx,
-				"carrot_idx": _get_carrot_index(lridx, (tpos + offset) * tile_size)
+				"carrot_idx": carrot_idx
 			})
 	return tiles
-
-func _get_carrot_index(lridx : int, pos: Vector2) -> int:
-	if lridx >= 0 and lridx < living_regions.size():
-		var carrot_list = regions[living_regions[lridx].ridx].carrots
-		var offset = living_regions[lridx].offset
-		for i in range(0, carrot_list.size()):
-			var carrot = carrot_list[i]
-			var cpos = (carrot.position * tile_size) + offset
-			if not carrot.eaten and cpos == pos:
-				return i
-	return -1
-
-func _has_carrot(lridx : int, pos : Vector2) -> bool:
-	if lridx >= 0 and lridx < living_regions.size():
-		var carrot_list = regions[living_regions[lridx].ridx].carrots
-		var offset = living_regions[lridx].offset
-		for carrot in carrot_list:
-			var cpos = (carrot.position * tile_size) + offset
-			if not carrot.eaten and cpos == pos:
-				return true
-	return false
 
 func _is_region_alive(ridx : int) -> bool:
 	for lr in living_regions:
@@ -483,6 +472,7 @@ func add_region(data, prnt : bool = false) -> void:
 			"offset":Vector2(0, 0),
 			"ridx": regions.size() - 1
 		})
+		emit_signal("region_change", regions[living_regions[0].ridx].name)
 
 
 
@@ -522,6 +512,7 @@ func _on_door_closed(exited_through : bool) -> void:
 			living_regions = [living_regions[1]]
 		else:
 			living_regions = [living_regions[0]]
+		emit_signal("region_change", regions[living_regions[0].ridx].name)
 
 func _on_carrot_pickup(ridx, cidx) -> void:
 	if ridx >= 0 and ridx < regions.size():
