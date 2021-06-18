@@ -8,6 +8,7 @@ const REGIONS = {
 	# -------------------------------------------------
 	"HUB_One":{
 		"is_hub": true,
+		"the_shattered": Vector2(8, 8),
 		"floor_color": Color(0.75, 0.75, 0.75),
 		"wall_color": Color(0.25, 0.25, 0.25),
 		"rect_list":[
@@ -49,7 +50,7 @@ const REGIONS = {
 			"to_didx": -1
 		}
 		],
-		"player_start": Vector2(11, 11)
+		"player_start": Vector2(8, 10)
 	},	
 	
 	# -------------------------------------------------
@@ -200,6 +201,7 @@ func _gen_regions(rname : String, depth : int = 4) -> int:
 		var reg = {
 			"name": rname,
 			"ridx": ridx,
+			"the_shattered": null,
 			"floor_color": REGIONS[rname].floor_color,
 			"wall_color": REGIONS[rname].wall_color,
 			"rect_list": [],
@@ -216,6 +218,10 @@ func _gen_regions(rname : String, depth : int = 4) -> int:
 		if carrot_list != null:
 			for carrot in carrot_list:
 				reg.carrots.append(carrot)
+
+		var the_shattered = REGIONS[rname].get("the_shattered")
+		if the_shattered != null:
+			reg.the_shattered = the_shattered
 
 		var didx = 0
 		for door in REGIONS[rname].door_list:

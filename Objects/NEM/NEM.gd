@@ -18,6 +18,7 @@ enum TILE_TYPE {NONE = 0, FLOOR = 1, WALL = 2, DOOR = 3}
 var tile_resource = preload("res://Objects/NEM/PulseTile.tscn")
 var door_resource = preload("res://Objects/NEM/DoorTile.tscn")
 var carrot_resource = preload("res://Objects/Carrot/Carrot.tscn")
+var shattered_resource = preload("res://Objects/TheShattered/TheShattered.tscn")
 var tile_size = 32
 
 var player_node = null
@@ -26,6 +27,7 @@ var regions = []
 
 var living_regions = []
 var living_tiles = {}
+var the_shattered_node = null
 
 var opened_door_info = null
 
@@ -40,6 +42,19 @@ onready var vizcast_node = $Viz_cast
 # ---------------------------------------------------------------------------
 # "Private" Methods
 # ---------------------------------------------------------------------------
+func _activate_living_region(ridx: int, offset : Vector2) -> void:
+	if living_regions.size() < 2:
+		living_regions.append({
+			"offset": offset,
+			"ridx": ridx
+		})
+		if regions[ridx].the_shattered != null:
+			the_shattered_node.position = (regions[ridx].the_shattered * tile_size) + offset
+
+func _drop_living_region(keep_lridx : int) -> void:
+	if living_regions.size() >= 2:
+		living_regions = [living_regions[keep_lridx]]
+
 func _update_living_tiles() -> void:
 	if player_node == null:
 		return
@@ -63,6 +78,9 @@ func _clear_living_tiles() -> void:
 				print("This is odd")
 		else:
 			dkeys.append(key)
+	
+	# "The Shattered" is a special item... use this special method to handle it's visibility...
+	_update_the_shattered()
 			
 	for key in dkeys:
 		if living_tiles[key].tile is DoorTile:
@@ -279,6 +297,18 @@ func _link_camera_and_player() -> void:
 	if camera_node and player_node:
 		camera_node.target_path = player_node.get_path()
 
+func _update_the_shattered() -> void:
+	if the_shattered_node != null and the_shattered_node.ridx < 0:
+		return
+	for lr in living_regions:
+		if lr.ridx == the_shattered_node.ridx:
+			if player_node.can_see_node(the_shattered_node):
+				the_shattered_node.visible = true
+				var dist = player_node.position.distance_to(the_shattered_node.position)
+				the_shattered_node.alpha = 1.0 - (dist / player_node.sight)
+			else:
+				the_shattered_node.visible = false
+
 # ---------------------------------------------------------------------------
 # NODE Override Methods
 # ---------------------------------------------------------------------------
@@ -349,6 +379,7 @@ func add_region(data, prnt : bool = false) -> void:
 		"width": 0,
 		"height": 0,
 		"player_start": null,
+		"the_shattered": null,
 		"carrots": [],
 		"doors": [],
 		"tiles":null
@@ -460,6 +491,15 @@ func add_region(data, prnt : bool = false) -> void:
 						"entity": null
 					})
 	
+	if data.the_shattered != null and the_shattered_node == null:
+		var tspos = data.the_shattered - container_rect.position
+		the_shattered_node = shattered_resource.instance()
+		the_shattered_node.ridx = regions.size()
+		the_shattered_node.alpha = 0.0
+		the_shattered_node.visible = false
+		ents_node.add_child(the_shattered_node)
+		reg.the_shattered = tspos
+	
 	regions.append(reg)
 	if prnt:
 		var idx = 0
@@ -468,12 +508,12 @@ func add_region(data, prnt : bool = false) -> void:
 			idx += reg.width
 	
 	if living_regions.size() <= 0:
-		living_regions.append({
-			"offset":Vector2(0, 0),
-			"ridx": regions.size() - 1
-		})
+		_activate_living_region(regions.size() - 1, Vector2(0, 0))
+		#living_regions.append({
+		#	"offset":Vector2(0, 0),
+		#	"ridx": regions.size() - 1
+		#})
 		emit_signal("region_change", regions[living_regions[0].ridx].name)
-
 
 
 # ---------------------------------------------------------------------------
@@ -499,19 +539,20 @@ func _on_door_open(dx : float, dy: float, ridx : int, didx : int) -> void:
 				offset.x = (pos.x - door.x)
 				offset.y = (pos.y - door.y)
 				#print("Pos: ", pos, " | Door Pos: ", Vector2(door.x, door.y), " | Result: ", offset)
-				living_regions.append({
-					"offset": offset * tile_size,
-					"ridx": ridx
-				})
+				_activate_living_region(ridx, offset * tile_size)
+				#living_regions.append({
+				#	"offset": offset * tile_size,
+				#	"ridx": ridx
+				#})
 				break
 
 func _on_door_closed(exited_through : bool) -> void:
 	if living_regions.size() > 1:
 		opened_door_info = null
 		if exited_through:
-			living_regions = [living_regions[1]]
+			_drop_living_region(1)
 		else:
-			living_regions = [living_regions[0]]
+			_drop_living_region(0)
 		emit_signal("region_change", regions[living_regions[0].ridx].name)
 
 func _on_carrot_pickup(ridx, cidx) -> void:

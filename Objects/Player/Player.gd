@@ -23,6 +23,7 @@ var triggered = false
 var facing = DIRECTION.DOWN
 
 var carrot_count = 0
+var part_id = 0
 var stamina = 100.0
 
 onready var vizcast_node = $Vizcast
@@ -103,7 +104,7 @@ func can_see_node(n : Node2D) -> bool:
 		var res = _caster_to_position(vizcast_node, n.position)
 		if res == null or res == n:
 			return true
-		if n is PulseTile or n is DoorTile:
+		if n.has_method("get_corners"):
 			var corners = n.get_corners()
 			for corner in corners:
 				res = _caster_to_position(vizcast_node, corner)
@@ -118,6 +119,14 @@ func play_animation(anim_name : String) -> void:
 
 func flip_sprite(f : bool = true) -> void:
 	sprite.flip_h = f
+
+func pickup_part(pid) -> void:
+	part_id = pid
+
+func take_part() -> int:
+	var p = part_id
+	part_id = 0
+	return p
 
 func pickup_carrot() -> void:
 	carrot_count += 1

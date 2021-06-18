@@ -1,0 +1,37 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://Assets/Graphics/Shattered.png" type="Texture" id=1]
+[ext_resource path="res://Objects/TheShattered/Part/Part.gd" type="Script" id=2]
+[ext_resource path="res://Shaders/PalSwap4.shader" type="Shader" id=3]
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = ExtResource( 3 )
+shader_param/pal_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
+shader_param/pal_col_2 = Color( 0.6, 0.6, 0.6, 1 )
+shader_param/pal_col_3 = Color( 0.8, 0.8, 0.8, 1 )
+shader_param/pal_col_4 = Color( 0, 0, 0, 1 )
+shader_param/replace_col_1 = Color( 0.6992, 0.6992, 0.6992, 1 )
+shader_param/replace_col_2 = Color( 0.6, 0.6, 0.6, 1 )
+shader_param/replace_col_3 = Color( 0.8, 0.8, 0.8, 1 )
+shader_param/replace_col_4 = Color( 0, 0, 0, 1 )
+shader_param/precision = 0.1
+shader_param/alpha = 1.0
+
+[sub_resource type="CircleShape2D" id=1]
+radius = 16.0
+
+[node name="Part" type="Node2D"]
+script = ExtResource( 2 )
+
+[node name="Sprite" type="Sprite" parent="."]
+material = SubResource( 2 )
+texture = ExtResource( 1 )
+region_enabled = true
+region_rect = Rect2( 32, 0, 32, 32 )
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource( 1 )
+
+[connection signal="body_entered" from="Area2D" to="." method="_on_body_entered"]

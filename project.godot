@@ -28,12 +28,18 @@ _global_script_classes=[ {
 "class": "State",
 "language": "GDScript",
 "path": "res://Scripts/FSM/State.gd"
+}, {
+"base": "Node2D",
+"class": "TheShattered",
+"language": "GDScript",
+"path": "res://Objects/TheShattered/TheShattered.gd"
 } ]
 _global_script_class_icons={
 "DoorTile": "",
 "Player": "",
 "PulseTile": "",
-"State": ""
+"State": "",
+"TheShattered": ""
 }
 
 [application]
