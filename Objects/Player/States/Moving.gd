@@ -20,6 +20,16 @@ func pause() -> void:
 
 func handle_input(_event) -> void:
 	.handle_input(_event)
+	
+	if _event.is_action_pressed("trigger") and host.get_speed() < 50.0:
+		host.trigger()
+	elif _event.is_action_released("trigger"):
+		host.trigger(false)
+	
+	if _event.is_action_pressed("charge"):
+		host.charge_tp()
+	elif _event.is_action_released("charge") and host.is_charging():
+		host.charge_release()
 
 
 func handle_physics(_delta : float) -> void:

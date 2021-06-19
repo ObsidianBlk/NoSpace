@@ -47,7 +47,7 @@ func _ready():
 		if not _change_state(initial_state):
 			print("WARNING: FSM Initial state '", initial_state, "' not in state map.")
 
-func _input(event):
+func _unhandled_input(event):
 	if cur_state != null:
 		state_map[cur_state].handle_input(event)
 

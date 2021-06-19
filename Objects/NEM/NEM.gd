@@ -19,6 +19,7 @@ var tile_resource = preload("res://Objects/NEM/PulseTile.tscn")
 var door_resource = preload("res://Objects/NEM/DoorTile.tscn")
 var carrot_resource = preload("res://Objects/Carrot/Carrot.tscn")
 var shattered_resource = preload("res://Objects/TheShattered/TheShattered.tscn")
+var part_resource = preload("res://Objects/TheShattered/Part/Part.tscn")
 var tile_size = 32
 
 var player_node = null
@@ -28,6 +29,7 @@ var regions = []
 var living_regions = []
 var living_tiles = {}
 var the_shattered_node = null
+var part_node = null
 
 var opened_door_info = null
 
@@ -55,6 +57,19 @@ func _drop_living_region(keep_lridx : int) -> void:
 	if living_regions.size() >= 2:
 		living_regions = [living_regions[keep_lridx]]
 
+func _random_living_region(pos : Vector2) -> void:
+	if living_regions.size() > 1:
+		_drop_living_region(0)
+	var ridx = living_regions[0].ridx
+	var avail = []
+	for i in range(0, regions.size()):
+		if i != ridx:
+			avail.append(i)
+	var nridx = avail[floor(rand_range(0, avail.size()))]
+	var offset = pos - (regions[nridx].player_start * tile_size)
+	living_regions = []
+	_activate_living_region(nridx, offset)
+
 func _update_living_tiles() -> void:
 	if player_node == null:
 		return
@@ -81,6 +96,7 @@ func _clear_living_tiles() -> void:
 	
 	# "The Shattered" is a special item... use this special method to handle it's visibility...
 	_update_the_shattered()
+	_update_part()
 			
 	for key in dkeys:
 		if living_tiles[key].tile is DoorTile:
@@ -197,7 +213,7 @@ func _build_from_tiles(tiles : Array) -> void:
 				if tn != null:
 					floors_node.add_child(tn)
 					tn.position = tpos
-					living_tiles[key] = {"ridx":ridx, "tile":tn, "carrot":carrot}
+					living_tiles[key] = {"ridx":ridx, "tile":tn, "type": ttype, "carrot":carrot}
 
 
 func _get_door_info(ridx : int, tidx : int):
@@ -306,20 +322,49 @@ func _update_the_shattered() -> void:
 				the_shattered_node.visible = true
 				var dist = player_node.position.distance_to(the_shattered_node.position)
 				the_shattered_node.alpha = 1.0 - (dist / player_node.sight)
-			else:
-				the_shattered_node.visible = false
+				return
+	the_shattered_node.visible = false
 
+func _update_part() -> void:
+	if part_node != null:
+		if player_node.can_see_node(part_node):
+			var dist = player_node.position.distance_to(part_node.position)
+			part_node.alpha = 1.0 - (dist / player_node.sight)
+		else:
+			part_node.alpha = 0.0
 # ---------------------------------------------------------------------------
 # NODE Override Methods
 # ---------------------------------------------------------------------------
+func _ready():
+	randomize()
+	#rand_seed(OS.get_unix_time())
+
+
 func _physics_process(delta : float) -> void:
 	_update_living_tiles()
 
 # ---------------------------------------------------------------------------
 # "Public" Methods"
 # ---------------------------------------------------------------------------
+func running() -> bool:
+	return regions.size() > 0 and living_regions.size() > 0 and player_node != null
+
+func clear_map() -> void:
+	living_regions = []
+	_clear_living_tiles()
+	if the_shattered_node:
+		the_shattered_node.kill()
+		the_shattered_node = null
+	if part_node:
+		part_node.kill()
+		part_node = null
+	regions = []
+	opened_door_info = null
+
+
 func detach_player_to_container(container : Node2D) -> void:
 	if player_node != null:
+		player_node.disconnect("teleport", self, "_on_teleport")
 		ents_node.remove_child(player_node)
 		container.add_child(player_node)
 		player_node = null
@@ -339,6 +384,7 @@ func attach_player(p : Player, container : Node2D) -> void:
 		ents_node.add_child(p)
 		player_node = p
 		player_node.position = ppos
+		player_node.connect("teleport", self, "_on_teleport")
 		
 		_link_camera_and_player()
 
@@ -497,6 +543,7 @@ func add_region(data, prnt : bool = false) -> void:
 		the_shattered_node.ridx = regions.size()
 		the_shattered_node.alpha = 0.0
 		the_shattered_node.visible = false
+		the_shattered_node.connect("spawn_part", self, "_on_spawn_part")
 		ents_node.add_child(the_shattered_node)
 		reg.the_shattered = tspos
 	
@@ -555,8 +602,36 @@ func _on_door_closed(exited_through : bool) -> void:
 			_drop_living_region(0)
 		emit_signal("region_change", regions[living_regions[0].ridx].name)
 
+func _on_teleport(to : Vector2) -> void:
+	var pos = Vector2(
+		floor((player_node.position.x / tile_size) + to.x),
+		floor((player_node.position.y / tile_size) + to.y)
+	) * tile_size
+	var key = String(int(pos.x)) + "x" + String(int(pos.y))
+	if key in living_tiles:
+		if living_tiles[key].type == TILE_TYPE.FLOOR:
+			player_node.position = pos
+	else:
+		player_node.position = pos
+		_random_living_region(player_node.position)
+
 func _on_carrot_pickup(ridx, cidx) -> void:
 	if ridx >= 0 and ridx < regions.size():
 		if cidx >= 0 and cidx < regions[ridx].carrots.size():
 			regions[ridx].carrots[cidx].eaten = true
 
+func _on_part_picked_up() -> void:
+	if part_node != null:
+		part_node.kill()
+		part_node = null
+
+func _on_spawn_part(id : int) -> void:
+	if part_node == null:
+		var angle = deg2rad(rand_range(0, 360))
+		var pos = Vector2(0, floor(rand_range(100, 200)) * tile_size).rotated(angle)
+		part_node = part_resource.instance()
+		part_node.id = id
+		part_node.connect("part_picked_up", self, "_on_part_picked_up")
+		ents_node.add_child(part_node)
+		part_node.target_path = player_node.get_path()
+		part_node.position = player_node.position + pos

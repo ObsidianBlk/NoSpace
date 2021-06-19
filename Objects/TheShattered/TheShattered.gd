@@ -1,7 +1,8 @@
-extends Node2D
+extends StaticBody2D
 class_name TheShattered
 
 signal spawn_part(pid)
+signal completed
 
 enum PARTS {BODY=100, LEYE=200, REYE=300}
 
@@ -9,6 +10,8 @@ export (float, 0.0, 1.0) var alpha = 1.0			setget _set_alpha
 export var ridx : int = -1
 
 var player = null
+var unshattered = false
+var first_part_out = false
 
 onready var base_node = $Base
 onready var body_node = $Body
@@ -40,7 +43,7 @@ func _emit_spawn_part() -> void:
 	var avail = []
 	if not body_node.visible:
 		avail.append(PARTS.BODY)
-	if not reye_node.visisble:
+	if not reye_node.visible:
 		avail.append(PARTS.REYE)
 	if not leye_node.visible:
 		avail.append(PARTS.LEYE)
@@ -57,7 +60,16 @@ func get_corners() -> Array:
 		position + Vector2(0, view_dist)
 	]
 
+func kill():
+	var parent = get_parent()
+	if parent:
+		parent.remove_child(self)
+	queue_free()
+
 func _on_trigger() -> void:
+	if unshattered:
+		return
+		
 	var new_part = false
 	if player.has_method("take_part"):
 		var part_id = player.take_part()
@@ -74,7 +86,10 @@ func _on_trigger() -> void:
 				if not leye_node.visible:
 					leye_node.visible = true
 					new_part = true
-	if new_part and not (body_node.visible and reye_node.visible and leye_node.visible):
+	if (body_node.visible and reye_node.visible and leye_node.visible):
+		unshattered = true
+		emit_signal("completed")
+	elif new_part:
 		_emit_spawn_part()
 
 func _on_body_entered(body : Node2D) -> void:
@@ -86,3 +101,14 @@ func _on_body_exited(body : Node2D) -> void:
 	if body == player:
 		player.disconnect("trigger", self, "_on_trigger")
 		player = null
+
+func _on_visibility_changed():
+	if visible:
+		if not first_part_out:
+			first_part_out = true
+			_emit_spawn_part()
+		collision_layer = 2
+		$CollisionShape2D.disabled = false
+	else:
+		collision_layer = 0
+		$CollisionShape2D.disabled = true

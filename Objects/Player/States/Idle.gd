@@ -31,6 +31,8 @@ func handle_input(_event) -> void:
 
 
 func handle_physics(_delta : float) -> void:
+	if host.is_charging():
+		host.charge_cancel()
 	if host.is_moving():
 		emit_signal("finished", "Moving")
 	host.update_movement(_delta)

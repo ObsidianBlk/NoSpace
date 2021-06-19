@@ -1,13 +1,12 @@
 extends "res://Scripts/FSM/State.gd"
 
+var consume_locked = false
+
 func _readjust(minv : float, maxv : float, v : float) -> float:
 	 return clamp((v - minv) / (maxv - minv), 0.0, 1.0)
 
 
-func handle_input(_event) -> void:
-	if _event.is_action_pressed("ui_cancel"):
-		get_tree().quit()
-	
+func handle_input(_event) -> void:	
 	var amount = 1.0
 	if _event is InputEventJoypadMotion:
 		amount = _readjust(0.4, 0.8, abs(_event.axis_value))
@@ -30,6 +29,12 @@ func handle_input(_event) -> void:
 		#print("Axis: ", _event.axis, " | Value: ", _event.axis_value, " | Is Action: ", _event.is_action_type())
 		
 	else:
+		if _event.is_action_pressed("consume") and not consume_locked:
+			host.consume_carrot()
+			consume_locked = true
+		elif _event.is_action_released("consume"):
+			consume_locked = false
+		
 		if _event.is_action_pressed("move_up"):
 			host.move(Player.DIRECTION.UP, amount)
 		elif _event.is_action_pressed("move_down"):
