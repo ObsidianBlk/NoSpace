@@ -187,7 +187,6 @@ func _build_from_tiles(tiles : Array) -> void:
 						tn = door_resource.instance()
 						tn.facing = dinfo.facing
 						if dinfo.to_ridx >= 0 and dinfo.to_didx >= 0:
-							print("Door to: ", regions[dinfo.to_ridx].name)
 							tn.ridx = dinfo.to_ridx
 							tn.didx = dinfo.to_didx
 						else:
@@ -582,12 +581,9 @@ func _on_door_open(dx : float, dy: float, ridx : int, didx : int) -> void:
 	var pos = Vector2(dx / tile_size, dy / tile_size)
 	var offset = Vector2.ZERO
 	if ridx >= 0 and ridx <= regions.size():
-		print("Opening Door to Region: ", regions[ridx].name, " | DIDX: ", didx)
 		var door_list = regions[ridx].doors
 		var foundDoor = false
 		for door in door_list:
-			if regions[ridx].name == ".T33_":
-				print("Door IDX: ", door.didx)
 			if door.didx == didx:
 				foundDoor = true
 				opened_door_info = {
@@ -598,14 +594,7 @@ func _on_door_open(dx : float, dy: float, ridx : int, didx : int) -> void:
 				}
 				offset.x = (pos.x - door.x)
 				offset.y = (pos.y - door.y)
-				if regions[ridx].name == ".T33_":
-					print("Found Door IDX: ", door.didx, " | Facing: ", door.facing)
-				#print("Pos: ", pos, " | Door Pos: ", Vector2(door.x, door.y), " | Result: ", offset)
 				_activate_living_region(ridx, offset * tile_size)
-				#living_regions.append({
-				#	"offset": offset * tile_size,
-				#	"ridx": ridx
-				#})
 				break
 		if not foundDoor:
 			print("Failed to find door to Region: ", regions[ridx].name, " | DIDX: ", didx)

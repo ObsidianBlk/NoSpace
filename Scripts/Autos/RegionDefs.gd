@@ -790,7 +790,6 @@ func _gen_regions(rname : String, depth : int = 4) -> int:
 	
 	var ridx = _get_reg_index_from_name(rname)
 	if ridx >= 0:
-		#print("Found RIDX (", ridx, ") for region '", rname, "'")
 		return ridx
 	
 	if rname in REGIONS:
@@ -825,14 +824,9 @@ func _gen_regions(rname : String, depth : int = 4) -> int:
 			var to_ridx = -1
 			if door.rname != ANY_TAG:
 				if depth > 0:
-					if rname == "_PI.11" and door.rname == "T41L":
-						print("Connecting")
 					to_ridx = _gen_regions(door.rname, depth - 1)
 				else:
-					if rname == "_PI.11" and door.rname == "T41L":
-						print("Searching")
 					to_ridx = _get_reg_index_from_name(door.rname)
-				print(rname, "(", ridx, ") -> ", door.rname, "(", to_ridx, ")")
 			var ndoor = {
 				"didx": didx,
 				"x": door.x,
@@ -843,8 +837,6 @@ func _gen_regions(rname : String, depth : int = 4) -> int:
 			}
 			if to_ridx < 0:
 				if ridx > 0:
-					if rname == "_PI.11":
-						print("Storing Any Door")
 					any_doors.append([rname, ndoor])
 				else:
 					hub_doors.append([rname, ndoor])

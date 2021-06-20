@@ -118,7 +118,6 @@ func _on_start_game() -> void:
 		12
 	)
 	var regions = RegionDefs.get_gen_regions()
-	print("Regions Generated: ", regions.size())
 	for reg in regions:
 		NEM.add_region(reg)
 	NEM.attach_player(player_node, container_node)

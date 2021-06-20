@@ -8,12 +8,10 @@ var target = null
 func _set_target_path(tp : NodePath) -> void:
 	target_path = tp
 	if tp == "":
-		print("No Target")
 		target = null
 	else:
 		var _t = get_node(target_path)
 		if _t:
-			print("Found Target")
 			target = _t
 
 func _ready():
