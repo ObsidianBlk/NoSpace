@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/BeatGlitch.ogg-cb56777b706054b43943b9fce9541647.oggstr"
+
+[deps]
+
+source_file="res://Assets/Audio/Music/BeatGlitch.ogg"
+dest_files=[ "res://.import/BeatGlitch.ogg-cb56777b706054b43943b9fce9541647.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

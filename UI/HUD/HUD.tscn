@@ -26,12 +26,31 @@ margin_top = 40.0
 margin_right = 1880.0
 margin_bottom = 1040.0
 
-[node name="PanelContainer" type="PanelContainer" parent="VBC"]
+[node name="TheShattered" type="HBoxContainer" parent="VBC"]
 margin_right = 1840.0
-margin_bottom = 12.0
+margin_bottom = 25.0
+
+[node name="Label" type="Label" parent="VBC/TheShattered"]
+margin_right = 266.0
+margin_bottom = 25.0
+text = "The Shattered:"
+
+[node name="LifeTime" type="PanelContainer" parent="VBC/TheShattered"]
+margin_left = 270.0
+margin_right = 1840.0
+margin_bottom = 25.0
+size_flags_horizontal = 3
+
+[node name="Bar" type="ProgressBar" parent="VBC/TheShattered/LifeTime"]
+margin_left = 6.0
+margin_top = 6.0
+margin_right = 1564.0
+margin_bottom = 19.0
+size_flags_vertical = 3
+percent_visible = false
 
 [node name="Container" type="Container" parent="VBC"]
-margin_top = 16.0
+margin_top = 29.0
 margin_right = 1840.0
 margin_bottom = 847.0
 size_flags_horizontal = 3

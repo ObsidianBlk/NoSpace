@@ -19,7 +19,7 @@ export var sight : int = 512					setget _set_sight
 export var speed : float = 200.0				setget _set_speed
 export var friction : float = 0.1				setget _set_friction
 export var acceleration : float = 0.2			setget _set_acceleration
-export var vel_threshold : float = 4.0			setget _set_vel_threshold
+export var vel_threshold : float = 30.0			setget _set_vel_threshold
 export var max_stamina : float = 100.0			setget _set_max_stamina
 
 var velocity : Vector2 = Vector2.ZERO

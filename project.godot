@@ -9,6 +9,11 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "Control",
+"class": "Dialog",
+"language": "GDScript",
+"path": "res://UI/Dialog/Dialog.gd"
+}, {
 "base": "StaticBody2D",
 "class": "DoorTile",
 "language": "GDScript",
@@ -40,6 +45,7 @@ _global_script_classes=[ {
 "path": "res://Objects/TheShattered/TheShattered.gd"
 } ]
 _global_script_class_icons={
+"Dialog": "",
 "DoorTile": "",
 "Menus": "",
 "Player": "",

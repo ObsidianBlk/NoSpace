@@ -70,9 +70,10 @@ func _draw():
 	var arc_deg = deg2rad(25)
 	var tpos = target.position + Vector2(0, -32)
 	var dist = position.distance_to(tpos)
-	if dist > 64.0:
+	if dist > 96.0:
 		var angle = position.angle_to_point(tpos)
-		var from = Vector2(-64, 0).rotated(angle)
+		#var from = Vector2(-64, 0).rotated(angle)
+		var from = Vector2(-(dist - 96), 0).rotated(angle)
 		var to = Vector2(-(dist - 64), 0).rotated(angle)
 		#print("Drawing From: ", position, " | To: ", to, " | Target Pos: ", target.position)
 		draw_line(from, to, Color(255, 255, 255), 2, true)

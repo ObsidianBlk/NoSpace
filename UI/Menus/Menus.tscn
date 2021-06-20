@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=2]
+[gd_scene load_steps=19 format=2]
 
 [ext_resource path="res://Theme/Fonts/Potra_DFD.tres" type="DynamicFontData" id=1]
 [ext_resource path="res://Theme/core_theme.tres" type="Theme" id=2]
@@ -6,8 +6,14 @@
 [ext_resource path="res://UI/Menus/TitleMenu.gd" type="Script" id=4]
 [ext_resource path="res://UI/Menus/GameMenu.gd" type="Script" id=5]
 [ext_resource path="res://Theme/Fonts/Commadore_DFD.tres" type="DynamicFontData" id=6]
-[ext_resource path="res://Assets/Graphics/GWJ_Info/GWJ_Logo_head.png" type="Texture" id=7]
+[ext_resource path="res://Assets/Graphics/GWJ_Info/GWJ34_Wild_GameTime.png" type="Texture" id=7]
+[ext_resource path="res://Assets/Graphics/GWJ_Info/GWJ34_Wild_Carrots.png" type="Texture" id=8]
+[ext_resource path="res://Assets/Graphics/GWJ_Info/GWJ34_Theme.png" type="Texture" id=9]
+[ext_resource path="res://Assets/Graphics/GWJ_Info/GWJ34_Wild_Hub.png" type="Texture" id=10]
 [ext_resource path="res://Assets/Graphics/ObsLogo/ObsJamLogo.png" type="Texture" id=11]
+[ext_resource path="res://Assets/Graphics/GWJ_Info/GWJ_Logo_head.png" type="Texture" id=12]
+[ext_resource path="res://UI/Menus/AboutGWJ34Menu.gd" type="Script" id=13]
+[ext_resource path="res://UI/Menus/OptionsMenu.gd" type="Script" id=14]
 
 [sub_resource type="DynamicFont" id=1]
 size = 132
@@ -37,6 +43,7 @@ __meta__ = {
 }
 
 [node name="TitleMenu" type="MarginContainer" parent="."]
+visible = false
 margin_right = 1920.0
 margin_bottom = 1080.0
 custom_constants/margin_right = 12
@@ -59,9 +66,9 @@ size_flags_vertical = 3
 
 [node name="VBC" type="VBoxContainer" parent="TitleMenu/VCB/Main"]
 margin_left = 640.0
-margin_top = 329.0
+margin_top = 377.0
 margin_right = 1255.0
-margin_bottom = 597.0
+margin_bottom = 550.0
 
 [node name="Title" type="Label" parent="TitleMenu/VCB/Main/VBC"]
 margin_right = 615.0
@@ -135,7 +142,7 @@ focus_neighbour_right = NodePath(".")
 focus_neighbour_bottom = NodePath(".")
 focus_next = NodePath("../../Main/VBC/PanelContainer/Buttons/BTN_Proceed")
 focus_previous = NodePath("../../Main/VBC/PanelContainer/Buttons/BTN_Proceed")
-icon = ExtResource( 7 )
+icon = ExtResource( 12 )
 align = 0
 expand_icon = true
 
@@ -249,6 +256,7 @@ text = "Escape"
 visible = false
 margin_right = 1920.0
 margin_bottom = 1080.0
+script = ExtResource( 14 )
 
 [node name="VBC" type="VBoxContainer" parent="OptionsMenu"]
 margin_left = 954.0
@@ -322,6 +330,8 @@ focus_neighbour_bottom = NodePath("../../SFXAudio/Slider")
 focus_next = NodePath("../../SFXAudio/Slider")
 focus_previous = NodePath(".")
 size_flags_horizontal = 3
+max_value = 1.0
+step = 0.05
 
 [node name="SFXAudio" type="HBoxContainer" parent="OptionsMenu/VBC/MainPanel/MC/Controls"]
 margin_top = 21.0
@@ -347,6 +357,8 @@ focus_neighbour_bottom = NodePath("../../MusicAudio/Slider")
 focus_next = NodePath("../../MusicAudio/Slider")
 focus_previous = NodePath("../../MainAudio/Slider")
 size_flags_horizontal = 3
+max_value = 1.0
+step = 0.05
 
 [node name="MusicAudio" type="HBoxContainer" parent="OptionsMenu/VBC/MainPanel/MC/Controls"]
 margin_top = 42.0
@@ -372,6 +384,8 @@ focus_neighbour_bottom = NodePath("../../BTN_Back")
 focus_next = NodePath("../../BTN_Back")
 focus_previous = NodePath("../../SFXAudio/Slider")
 size_flags_horizontal = 3
+max_value = 1.0
+step = 0.05
 
 [node name="BTN_Back" type="Button" parent="OptionsMenu/VBC/MainPanel/MC/Controls"]
 margin_top = 63.0
@@ -385,12 +399,78 @@ focus_next = NodePath(".")
 focus_previous = NodePath("../MusicAudio/Slider")
 text = "Back"
 
-[connection signal="visibility_changed" from="TitleMenu" to="." method="_on_visibility_changed"]
+[node name="AboutGWJ34Menu" type="CenterContainer" parent="."]
+visible = false
+margin_right = 1920.0
+margin_bottom = 1080.0
+script = ExtResource( 13 )
+
+[node name="VBC" type="VBoxContainer" parent="AboutGWJ34Menu"]
+margin_left = 610.0
+margin_top = 290.0
+margin_right = 1310.0
+margin_bottom = 789.0
+custom_constants/separation = 12
+
+[node name="Theme" type="TextureRect" parent="AboutGWJ34Menu/VBC"]
+margin_right = 700.0
+margin_bottom = 200.0
+texture = ExtResource( 9 )
+
+[node name="WildCards" type="HBoxContainer" parent="AboutGWJ34Menu/VBC"]
+margin_top = 212.0
+margin_right = 700.0
+margin_bottom = 462.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="WildCard_Carrot" type="TextureRect" parent="AboutGWJ34Menu/VBC/WildCards"]
+margin_right = 184.0
+margin_bottom = 250.0
+rect_min_size = Vector2( 184, 250 )
+texture = ExtResource( 8 )
+expand = true
+stretch_mode = 5
+
+[node name="WildCard_GameTime" type="TextureRect" parent="AboutGWJ34Menu/VBC/WildCards"]
+margin_left = 188.0
+margin_right = 512.0
+margin_bottom = 250.0
+rect_min_size = Vector2( 184, 250 )
+size_flags_horizontal = 3
+texture = ExtResource( 7 )
+expand = true
+stretch_mode = 6
+
+[node name="WildCard_Hub" type="TextureRect" parent="AboutGWJ34Menu/VBC/WildCards"]
+margin_left = 516.0
+margin_right = 700.0
+margin_bottom = 250.0
+rect_min_size = Vector2( 184, 250 )
+texture = ExtResource( 10 )
+expand = true
+stretch_mode = 5
+
+[node name="BTN_Back" type="Button" parent="AboutGWJ34Menu/VBC"]
+margin_top = 474.0
+margin_right = 700.0
+margin_bottom = 499.0
+text = "Back"
+
+[connection signal="visibility_changed" from="TitleMenu" to="TitleMenu" method="_on_visibility_changed"]
 [connection signal="pressed" from="TitleMenu/VCB/Main/VBC/PanelContainer/Buttons/BTN_Proceed" to="." method="_on_BTN_Proceed_pressed"]
 [connection signal="pressed" from="TitleMenu/VCB/Main/VBC/PanelContainer/Buttons/BTN_Adjustments" to="." method="_on_BTN_Adjustments_pressed"]
 [connection signal="pressed" from="TitleMenu/VCB/Main/VBC/PanelContainer/Buttons/BTN_Escape" to="." method="_on_BTN_Escape_pressed"]
+[connection signal="pressed" from="TitleMenu/VCB/AboutArea/BTN_AboutGWJ" to="." method="_set_screen" binds= [ 4 ]]
 [connection signal="visibility_changed" from="GameMenu" to="GameMenu" method="_on_visibility_changed"]
 [connection signal="pressed" from="GameMenu/VBC/MainPanel/MC/Buttons/BTN_Resume" to="." method="_on_BTN_Resume_pressed"]
 [connection signal="pressed" from="GameMenu/VBC/MainPanel/MC/Buttons/BTN_Adjustments" to="." method="_on_BTN_Adjustments_pressed"]
 [connection signal="pressed" from="GameMenu/VBC/MainPanel/MC/Buttons/BTN_Escape" to="." method="_on_BTN_Escape_pressed"]
+[connection signal="visibility_changed" from="OptionsMenu" to="OptionsMenu" method="_on_visibility_changed"]
+[connection signal="value_changed" from="OptionsMenu/VBC/MainPanel/MC/Controls/MainAudio/Slider" to="." method="_on_MasterVol_value_changed"]
+[connection signal="value_changed" from="OptionsMenu/VBC/MainPanel/MC/Controls/SFXAudio/Slider" to="." method="_on_SFXVol_value_changed"]
+[connection signal="value_changed" from="OptionsMenu/VBC/MainPanel/MC/Controls/MusicAudio/Slider" to="." method="_on_MusicVol_value_changed"]
 [connection signal="pressed" from="OptionsMenu/VBC/MainPanel/MC/Controls/BTN_Back" to="." method="_on_BTN_Back_pressed"]
+[connection signal="visibility_changed" from="AboutGWJ34Menu" to="AboutGWJ34Menu" method="_on_visibility_changed"]
+[connection signal="pressed" from="AboutGWJ34Menu/VBC/BTN_Back" to="." method="_on_BTN_Back_pressed"]

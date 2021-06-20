@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=2]
+[gd_scene load_steps=13 format=2]
 
 [ext_resource path="res://Objects/Player/Player.tscn" type="PackedScene" id=1]
 [ext_resource path="res://Objects/NEM/NEM.tscn" type="PackedScene" id=2]
@@ -8,6 +8,8 @@
 [ext_resource path="res://Objects/Camera/Camera.tscn" type="PackedScene" id=6]
 [ext_resource path="res://UI/HUD/HUD.tscn" type="PackedScene" id=7]
 [ext_resource path="res://UI/Menus/Menus.tscn" type="PackedScene" id=8]
+[ext_resource path="res://UI/Dialog/Dialog.tscn" type="PackedScene" id=9]
+[ext_resource path="res://Assets/Audio/Music/BeatGlitch.ogg" type="AudioStream" id=10]
 
 [sub_resource type="ShaderMaterial" id=1]
 resource_local_to_scene = true
@@ -62,6 +64,14 @@ environment = SubResource( 2 )
 visible = false
 
 [node name="Menus" parent="UI" instance=ExtResource( 8 )]
+
+[node name="Dialog" parent="UI" instance=ExtResource( 9 )]
+visible = false
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 10 )
+autoplay = true
+bus = "Music"
 
 [connection signal="escape" from="UI/Menus" to="." method="_on_escape"]
 [connection signal="quit_game" from="UI/Menus" to="." method="_on_quit_game"]

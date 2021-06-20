@@ -1,0 +1,173 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://Theme/Fonts/Potra_DFD.tres" type="DynamicFontData" id=1]
+[ext_resource path="res://Assets/Graphics/Char_Icon.png" type="Texture" id=2]
+[ext_resource path="res://UI/Dialog/TheSpeaker.gd" type="Script" id=3]
+[ext_resource path="res://UI/Dialog/Dialog.gd" type="Script" id=4]
+[ext_resource path="res://Theme/core_theme.tres" type="Theme" id=5]
+
+[sub_resource type="DynamicFont" id=1]
+size = 52
+font_data = ExtResource( 1 )
+
+[node name="Dialog" type="MarginContainer"]
+pause_mode = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource( 5 )
+script = ExtResource( 4 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Text" type="VBoxContainer" parent="."]
+margin_right = 1920.0
+margin_bottom = 1080.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Container2" type="Container" parent="Text"]
+margin_right = 1920.0
+margin_bottom = 357.0
+size_flags_vertical = 3
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label_Box" type="ColorRect" parent="Text"]
+margin_top = 361.0
+margin_right = 1920.0
+margin_bottom = 718.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+color = Color( 0.384314, 0.419608, 0.494118, 0.784314 )
+
+[node name="MC" type="MarginContainer" parent="Text/Label_Box"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_constants/margin_right = 12
+custom_constants/margin_top = 12
+custom_constants/margin_left = 12
+custom_constants/margin_bottom = 12
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label" type="Label" parent="Text/Label_Box/MC"]
+margin_left = 12.0
+margin_top = 12.0
+margin_right = 1908.0
+margin_bottom = 345.0
+size_flags_horizontal = 3
+size_flags_vertical = 5
+text = "I should say something very spiffy here, but I know not what..."
+autowrap = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Container" type="Container" parent="Text"]
+margin_top = 722.0
+margin_right = 1920.0
+margin_bottom = 1080.0
+size_flags_vertical = 3
+
+[node name="TheSpeaker" type="VBoxContainer" parent="."]
+margin_right = 1920.0
+margin_bottom = 1080.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource( 3 )
+
+[node name="TheShattered" type="MarginContainer" parent="TheSpeaker"]
+margin_right = 1920.0
+margin_bottom = 357.0
+size_flags_vertical = 3
+custom_constants/margin_left = 12
+custom_constants/margin_bottom = 8
+
+[node name="VBC" type="VBoxContainer" parent="TheSpeaker/TheShattered"]
+margin_left = 12.0
+margin_right = 1920.0
+margin_bottom = 349.0
+
+[node name="Container" type="Container" parent="TheSpeaker/TheShattered/VBC"]
+margin_right = 1908.0
+margin_bottom = 349.0
+size_flags_vertical = 3
+
+[node name="HBC" type="HBoxContainer" parent="TheSpeaker/TheShattered/VBC"]
+visible = false
+margin_top = 285.0
+margin_right = 1908.0
+margin_bottom = 349.0
+custom_constants/separation = 20
+
+[node name="Face" type="TextureRect" parent="TheSpeaker/TheShattered/VBC/HBC"]
+margin_right = 64.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 2 )
+expand = true
+stretch_mode = 6
+
+[node name="Label" type="Label" parent="TheSpeaker/TheShattered/VBC/HBC"]
+margin_left = 84.0
+margin_top = 1.0
+margin_right = 478.0
+margin_bottom = 63.0
+custom_fonts/font = SubResource( 1 )
+text = "The Shattered	"
+
+[node name="Container2" type="Container" parent="TheSpeaker"]
+margin_top = 361.0
+margin_right = 1920.0
+margin_bottom = 718.0
+size_flags_vertical = 3
+
+[node name="TheEntity" type="MarginContainer" parent="TheSpeaker"]
+margin_top = 722.0
+margin_right = 1920.0
+margin_bottom = 1080.0
+size_flags_vertical = 3
+custom_constants/margin_right = 12
+custom_constants/margin_top = 8
+
+[node name="VBC" type="VBoxContainer" parent="TheSpeaker/TheEntity"]
+margin_top = 8.0
+margin_right = 1908.0
+margin_bottom = 358.0
+
+[node name="HBC" type="HBoxContainer" parent="TheSpeaker/TheEntity/VBC"]
+visible = false
+margin_right = 1908.0
+margin_bottom = 64.0
+size_flags_horizontal = 3
+custom_constants/separation = 20
+
+[node name="Label" type="Label" parent="TheSpeaker/TheEntity/VBC/HBC"]
+margin_top = 1.0
+margin_right = 1824.0
+margin_bottom = 63.0
+size_flags_horizontal = 3
+custom_fonts/font = SubResource( 1 )
+text = "The Entity"
+align = 2
+
+[node name="Face" type="TextureRect" parent="TheSpeaker/TheEntity/VBC/HBC"]
+margin_left = 1844.0
+margin_right = 1908.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 2 )
+expand = true
+stretch_mode = 5
+
+[node name="Container" type="Container" parent="TheSpeaker/TheEntity/VBC"]
+margin_right = 1908.0
+margin_bottom = 350.0
+size_flags_vertical = 3
+
+[node name="Tween" type="Tween" parent="."]
+
+[connection signal="visibility_changed" from="." to="." method="_on_visibility_changed"]

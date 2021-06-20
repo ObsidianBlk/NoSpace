@@ -6,6 +6,9 @@ extends Node2D
 # ---------------------------------------------------------------------------
 
 signal region_change(rname)
+signal life_time_change(v, vmax)
+signal completed
+signal oot
 
 # ---------------------------------------------------------------------------
 # ENUM Definitions
@@ -184,6 +187,7 @@ func _build_from_tiles(tiles : Array) -> void:
 						tn = door_resource.instance()
 						tn.facing = dinfo.facing
 						if dinfo.to_ridx >= 0 and dinfo.to_didx >= 0:
+							print("Door to: ", regions[dinfo.to_ridx].name)
 							tn.ridx = dinfo.to_ridx
 							tn.didx = dinfo.to_didx
 						else:
@@ -246,7 +250,7 @@ func _get_tiles(pos : Vector2, radius : float, lridx : int = 0):
 	
 	var trad = floor(radius / tile_size)
 	var inc_region = Rect2(start.x - trad, start.y - trad, trad*2, trad*2)
-	var treg = false
+	#var treg = false
 	if lridx == 0 and opened_door_info != null:
 		# NOTE: For my own confusion, the actual inclusion regions are INVERTED due to an error in
 		# facing that cannot be fixed quickly (I think).
@@ -259,8 +263,8 @@ func _get_tiles(pos : Vector2, radius : float, lridx : int = 0):
 				inc_region = Rect2(start.x - trad, start.y - trad, trad, trad*2)
 			DoorTile.FACING.RIGHT:
 				inc_region = Rect2(start.x, start.y - trad, trad, trad*2)
-		if living_regions[1].ridx == 2:
-			treg = true
+		#if living_regions[1].ridx == 2:
+			#treg = true
 			#print("Facing: ", regions[1].doors[1].facing)
 			#print("Pos", pos, " | Inc Region: ", inc_region, "Facing: ", opened_door_info.facing)
 	
@@ -314,8 +318,9 @@ func _link_camera_and_player() -> void:
 		camera_node.target_path = player_node.get_path()
 
 func _update_the_shattered() -> void:
-	if the_shattered_node != null and the_shattered_node.ridx < 0:
+	if the_shattered_node == null or the_shattered_node.ridx < 0:
 		return
+		
 	for lr in living_regions:
 		if lr.ridx == the_shattered_node.ridx:
 			if player_node.can_see_node(the_shattered_node):
@@ -544,6 +549,9 @@ func add_region(data, prnt : bool = false) -> void:
 		the_shattered_node.alpha = 0.0
 		the_shattered_node.visible = false
 		the_shattered_node.connect("spawn_part", self, "_on_spawn_part")
+		the_shattered_node.connect("life_time_change", self, "_on_life_time_change")
+		the_shattered_node.connect("completed", self, "_on_completed")
+		the_shattered_node.connect("oot", self, "_on_oot")
 		ents_node.add_child(the_shattered_node)
 		reg.the_shattered = tspos
 	
@@ -574,9 +582,14 @@ func _on_door_open(dx : float, dy: float, ridx : int, didx : int) -> void:
 	var pos = Vector2(dx / tile_size, dy / tile_size)
 	var offset = Vector2.ZERO
 	if ridx >= 0 and ridx <= regions.size():
+		print("Opening Door to Region: ", regions[ridx].name, " | DIDX: ", didx)
 		var door_list = regions[ridx].doors
+		var foundDoor = false
 		for door in door_list:
+			if regions[ridx].name == ".T33_":
+				print("Door IDX: ", door.didx)
 			if door.didx == didx:
+				foundDoor = true
 				opened_door_info = {
 					"x": door.x,
 					"y": door.y,
@@ -585,6 +598,8 @@ func _on_door_open(dx : float, dy: float, ridx : int, didx : int) -> void:
 				}
 				offset.x = (pos.x - door.x)
 				offset.y = (pos.y - door.y)
+				if regions[ridx].name == ".T33_":
+					print("Found Door IDX: ", door.didx, " | Facing: ", door.facing)
 				#print("Pos: ", pos, " | Door Pos: ", Vector2(door.x, door.y), " | Result: ", offset)
 				_activate_living_region(ridx, offset * tile_size)
 				#living_regions.append({
@@ -592,6 +607,8 @@ func _on_door_open(dx : float, dy: float, ridx : int, didx : int) -> void:
 				#	"ridx": ridx
 				#})
 				break
+		if not foundDoor:
+			print("Failed to find door to Region: ", regions[ridx].name, " | DIDX: ", didx)
 
 func _on_door_closed(exited_through : bool) -> void:
 	if living_regions.size() > 1:
@@ -635,3 +652,13 @@ func _on_spawn_part(id : int) -> void:
 		ents_node.add_child(part_node)
 		part_node.target_path = player_node.get_path()
 		part_node.position = player_node.position + pos
+
+func _on_life_time_change(v : float, vmax : float) -> void:
+	emit_signal("life_time_change", v, vmax)
+
+func _on_completed() -> void:
+	emit_signal("completed")
+
+func _on_oot() -> void:
+	emit_signal("oot")
+
